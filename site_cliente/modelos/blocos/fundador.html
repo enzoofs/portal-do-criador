@@ -1,0 +1,12 @@
+<section class="bloco faixa-foto" id="{{ bloco.id or 'fundador' }}">
+  {% if bloco.imagem_fundo %}<div class="fundo-img" style="background-image:url('{{ raiz }}assets/{{ bloco.imagem_fundo }}')"></div>{% endif %}
+  <div class="cx">
+    <div class="faixa-txt">
+      {% if bloco.olho %}<p class="olho">{{ bloco.olho }}</p>{% endif %}
+      <h2>{{ bloco.titulo }}</h2>
+      {% for p in s.fundador.bio %}<p>{{ p }}</p>{% endfor %}
+      {% if s.fundador.destaques %}<ul class="marcas">{% for d in s.fundador.destaques %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}
+      {% if bloco.link_sobre and tem_sobre %}<p class="fonte"><a href="{{ link_pagina('sobre') }}">Conheça a {{ s.empresa.nome }} →</a></p>{% endif %}
+    </div>
+  </div>
+</section>

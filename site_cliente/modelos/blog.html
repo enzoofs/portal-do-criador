@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% import "_blocos.html" as b with context %}
+{% block conteudo %}
+<section class="blog-topo">
+  <div class="cx">
+    <p class="trilha"><a href="../">Início</a> / Blog</p>
+    <h1>{{ s.blog.titulo }}</h1>
+    {% if s.blog.texto %}<p>{{ s.blog.texto }}</p>{% endif %}
+  </div>
+</section>
+<section class="bloco"><div class="cx">{{ b.cartoes_blog(artigos, '', '') }}</div></section>
+{% endblock %}

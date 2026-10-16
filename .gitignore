@@ -1,0 +1,30 @@
+# Segredos: chaves de API ficam só no .env local (modelo em .env.example)
+.env
+*.json.key
+conta-de-servico*.json
+
+# Ambiente Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Dados gerados pelo uso do app (radares, pautas, medições, gastos).
+# Contêm dados de clientes e de terceiros; não vão para o repositório.
+data/
+relatorios/
+
+# Dados de clientes reais (LGPD): ficam só na máquina da TimeLabs. No repositório vai apenas
+# o cliente fictício "exemplo", para testes e demonstração. Ver docs/LGPD.md.
+config/clientes/*
+!config/clientes/exemplo.json
+config/sites/*
+!config/sites/exemplo/
+entregas/
+docs/analises/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

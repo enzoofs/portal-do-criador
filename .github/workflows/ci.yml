@@ -1,0 +1,79 @@
+# Checagens a cada push e pull request: estilo e erros (ruff), segurança do código (bandit),
+# vulnerabilidades conhecidas nas dependências (pip-audit), testes e segredos no histórico (gitleaks).
+# Nenhuma etapa usa chave de API nem rede paga: os testes rodam com o cliente fictício "exemplo".
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualidade:
+    name: Testes e lint (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.14"]   # versão mínima declarada e a usada no dia a dia
+    steps:
+      # Actions fixadas pelo SHA do commit (a tag pode ser movida; o SHA não)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install "ruff==0.17.1" "bandit==1.9.4" "pip-audit==2.10.1"
+
+      - name: Ruff
+        run: ruff check . --output-format=github
+
+      - name: Bandit
+        run: bandit -c pyproject.toml -r . -q
+
+      - name: pip-audit (CVEs nas versões exatas do lock)
+        run: pip-audit -r requirements-lock.txt --no-deps --disable-pip --progress-spinner off
+
+      - name: Testes
+        run: python testes.py
+
+  segredos:
+    name: Segredos no histórico (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Baixar gitleaks com checksum conferido
+        env:
+          VERSAO: "8.30.1"
+          SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+        run: |
+          arquivo="gitleaks_${VERSAO}_linux_x64.tar.gz"
+          curl -fsSL -o "$arquivo" "https://github.com/gitleaks/gitleaks/releases/download/v${VERSAO}/${arquivo}"
+          echo "${SHA256}  ${arquivo}" | sha256sum -c -
+          tar -xzf "$arquivo" gitleaks
+
+      - name: Varrer o histórico inteiro
+        run: ./gitleaks git . --redact --no-banner --exit-code 1

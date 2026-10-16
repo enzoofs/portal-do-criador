@@ -1,0 +1,289 @@
+{
+  "origem": "Fontsource (https://fontsource.org), via cdn.jsdelivr.net, subconjunto latin",
+  "familias": {
+    "Sora": {
+      "pasta": "sora",
+      "pacote": "@fontsource-variable/sora@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "sora-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "fa26406eeda9a3c6ec3d9ea8813c3045d6dc755e30c716d5c094e8ef43be5a7f",
+          "bytes": 33652
+        }
+      ]
+    },
+    "Manrope": {
+      "pasta": "manrope",
+      "pacote": "@fontsource-variable/manrope@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "manrope-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972",
+          "bytes": 24836
+        }
+      ]
+    },
+    "Inter": {
+      "pasta": "inter",
+      "pacote": "@fontsource-variable/inter@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "inter-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62",
+          "bytes": 48256
+        }
+      ]
+    },
+    "DM Sans": {
+      "pasta": "dm-sans",
+      "pacote": "@fontsource-variable/dm-sans@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "dm-sans-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "9fea608a947e67020c33cad9a6fe3d60c54119dfb8cff87768a8117a15ed7543",
+          "bytes": 36932
+        }
+      ]
+    },
+    "Plus Jakarta Sans": {
+      "pasta": "plus-jakarta-sans",
+      "pacote": "@fontsource-variable/plus-jakarta-sans@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "plus-jakarta-sans-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "153fc85b70298beeb1d61a5f723331649e7f23bb77302a66e61cb3e2fbdb5e79",
+          "bytes": 27348
+        }
+      ]
+    },
+    "Outfit": {
+      "pasta": "outfit",
+      "pacote": "@fontsource-variable/outfit@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "outfit-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "6c18d579fd87c3776be068b762cbc83fde3acb543d49eabd3ade842eb987e887",
+          "bytes": 32292
+        }
+      ]
+    },
+    "Figtree": {
+      "pasta": "figtree",
+      "pacote": "@fontsource-variable/figtree@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "figtree-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "4ba7d3d096695818fe0686be4f1e82c6b05134e18a22260336130335027462dd",
+          "bytes": 20156
+        }
+      ]
+    },
+    "Lexend": {
+      "pasta": "lexend",
+      "pacote": "@fontsource-variable/lexend@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "lexend-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "b7e7538f59bff1812841d7627f8e49e70fe86438f9f7b397a028c0d05301c874",
+          "bytes": 39680
+        }
+      ]
+    },
+    "Poppins": {
+      "pasta": "poppins",
+      "pacote": "@fontsource/poppins@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "poppins-latin-400-normal.woff2",
+          "pesos": "400",
+          "sha256": "7d93459d86585bfcdbb7e0376056226adb25821ee54b96236fe2123e9560929f",
+          "bytes": 7884
+        },
+        {
+          "arquivo": "poppins-latin-500-normal.woff2",
+          "pesos": "500",
+          "sha256": "cd36de204aca2d5fa263a731f7c20009b5e3d754ba1f1e03c33e93a48f3e7446",
+          "bytes": 7748
+        },
+        {
+          "arquivo": "poppins-latin-600-normal.woff2",
+          "pesos": "600",
+          "sha256": "f4e80d9dfd374d02989b87a27b5ed4cb78fbb177c27f1478e9a8b0afb7513149",
+          "bytes": 8000
+        },
+        {
+          "arquivo": "poppins-latin-700-normal.woff2",
+          "pesos": "700",
+          "sha256": "9338e65fc077355c7a87ae0d64cc101e23b9bf8ad78ae65f0f319c857311b526",
+          "bytes": 7816
+        }
+      ]
+    },
+    "Montserrat": {
+      "pasta": "montserrat",
+      "pacote": "@fontsource-variable/montserrat@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "montserrat-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "06b16db7a969135d48d38c49183be7fb88d4452e2a3011957c7851941f4e4879",
+          "bytes": 37956
+        }
+      ]
+    },
+    "Raleway": {
+      "pasta": "raleway",
+      "pacote": "@fontsource-variable/raleway@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "raleway-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "b1bef1f03a77a36fc257c5525e32a1dd621bb6f935b743a419da7ed0b18dc8f5",
+          "bytes": 48264
+        }
+      ]
+    },
+    "Work Sans": {
+      "pasta": "work-sans",
+      "pacote": "@fontsource-variable/work-sans@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "work-sans-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "1dd49afc07fb2231b2ff686cbf007725fb2742271bb1f28ebd98f22a0d817343",
+          "bytes": 50316
+        }
+      ]
+    },
+    "Nunito": {
+      "pasta": "nunito",
+      "pacote": "@fontsource-variable/nunito@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "nunito-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "ba344451eab25b217a165363b1982048a5e5830a0daf36577973955a04cac793",
+          "bytes": 39128
+        }
+      ]
+    },
+    "Lato": {
+      "pasta": "lato",
+      "pacote": "@fontsource/lato@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "lato-latin-400-normal.woff2",
+          "pesos": "400",
+          "sha256": "918b7dc3e2e2d015c16ce08b57bcb64d2253bafc1707658f361e72865498e537",
+          "bytes": 23580
+        },
+        {
+          "arquivo": "lato-latin-700-normal.woff2",
+          "pesos": "700",
+          "sha256": "c447dd7677b419db7b21dbdfc6277c7816a913ffda76fd2e52702df538de0e49",
+          "bytes": 23040
+        }
+      ]
+    },
+    "Open Sans": {
+      "pasta": "open-sans",
+      "pacote": "@fontsource-variable/open-sans@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "open-sans-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "d8e4fe0452aa2076429a9bb5d8757d00a994dd95986cf950e9a1a371b9a072a0",
+          "bytes": 48320
+        }
+      ]
+    },
+    "Archivo": {
+      "pasta": "archivo",
+      "pacote": "@fontsource-variable/archivo@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "archivo-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "8f704806dbedeaaeca334b11ec348bc3ac3a439d6431544b3afb54f534ee4967",
+          "bytes": 34928
+        }
+      ]
+    },
+    "Space Grotesk": {
+      "pasta": "space-grotesk",
+      "pacote": "@fontsource-variable/space-grotesk@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "space-grotesk-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "0640890476fc1198ab4de571fb658de443c4d85b66466ec09534a8737ab1ce9d",
+          "bytes": 22288
+        }
+      ]
+    },
+    "Playfair Display": {
+      "pasta": "playfair-display",
+      "pacote": "@fontsource-variable/playfair-display@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "playfair-display-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "e0c764a8e9e1cce92163c55bac4b2ad6cd4cf8c696ce2289ab5c41565e65b7e2",
+          "bytes": 38404
+        }
+      ]
+    },
+    "Fraunces": {
+      "pasta": "fraunces",
+      "pacote": "@fontsource-variable/fraunces@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "fraunces-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "7f9d191d999336d3b9790afa72e1358e50a13b06d4f289341e92a311967a80f9",
+          "bytes": 36620
+        }
+      ]
+    },
+    "Merriweather": {
+      "pasta": "merriweather",
+      "pacote": "@fontsource-variable/merriweather@5.3.0",
+      "licenca": "OFL-1.1",
+      "arquivos": [
+        {
+          "arquivo": "merriweather-latin-wght-normal.woff2",
+          "pesos": "100 900",
+          "sha256": "4fbe8dd9c23b1fd62a988bb8a69b8e692d810f773d9ef6ebca2ba2760c7b11ee",
+          "bytes": 97548
+        }
+      ]
+    }
+  }
+}

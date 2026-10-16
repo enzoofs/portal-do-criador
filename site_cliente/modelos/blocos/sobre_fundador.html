@@ -1,0 +1,11 @@
+<section class="bloco" id="{{ bloco.id or 'fundador' }}">
+  <div class="cx sobre-grade">
+    <div class="leitura">
+      {% if bloco.olho %}<p class="olho">{{ bloco.olho }}</p>{% endif %}
+      <h2 style="margin-top:12px">{{ bloco.titulo }}</h2>
+      {% for p in s.fundador.bio %}<p>{{ p }}</p>{% endfor %}
+      {% if s.fundador.destaques %}<ul class="marcas">{% for d in s.fundador.destaques %}<li>{{ d }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    {% if bloco.foto %}<figure class="foto-fundador" style="margin:0"><img src="{{ raiz }}assets/{{ bloco.foto }}" alt="{{ s.fundador.nome }}, {{ s.fundador.cargo }} da {{ s.empresa.nome }}" width="600" height="900" loading="lazy"></figure>{% endif %}
+  </div>
+</section>

@@ -1,0 +1,5 @@
+{% if bloco.olho or bloco.titulo or bloco.texto %}<div class="cab-bloco">
+  {% if bloco.olho %}<p class="olho">{{ bloco.olho }}</p>{% endif %}
+  {% if bloco.titulo %}<h2>{{ bloco.titulo }}</h2>{% endif %}
+  {% if bloco.texto %}<p>{{ bloco.texto }}</p>{% endif %}
+</div>{% endif %}

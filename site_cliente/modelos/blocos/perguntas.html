@@ -1,0 +1,9 @@
+<section class="bloco" id="{{ bloco.id or 'perguntas' }}">
+  <div class="cx">
+    {% include "blocos/_cab.html" %}
+    <div class="perguntas">
+      {% for p in bloco.itens %}<details><summary>{{ p.pergunta }}</summary><p>{{ p.resposta }}</p></details>
+      {% endfor %}
+    </div>
+  </div>
+</section>

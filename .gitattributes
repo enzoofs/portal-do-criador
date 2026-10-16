@@ -1,0 +1,7 @@
+# Fim de linha uniforme no repositório (LF); o .bat precisa de CRLF para o Windows
+* text=auto eol=lf
+*.bat text eol=crlf
+*.pdf binary
+*.png binary
+*.jpg binary
+*.woff2 binary

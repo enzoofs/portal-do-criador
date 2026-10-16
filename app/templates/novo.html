@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui with context %}
+{% block titulo %}Novo cliente · Portal do Criador{% endblock %}
+{% block trilha %}<a href="{{ url_for('inicio') }}">Carteira</a><span>/</span><b>Novo cliente</b>{% endblock %}
+{% block conteudo %}
+{% call ui.cabecalho('Novo cliente', 'Com estes dados o portal monta as perguntas do radar e o perfil que guia os artigos. Tudo pode ser ajustado depois.') %}
+  <a class="btn leve" href="{{ url_for('inicio') }}">Cancelar</a>
+  <button class="btn primario" form="f-novo">Criar cliente</button>
+{% endcall %}
+
+<section class="pane ler-site" aria-labelledby="ls-tit">
+  <div>
+    <h2 id="ls-tit">Começar pelo site</h2>
+    <p>Cole o endereço e o portal preenche o que conseguir. Confira tudo antes de criar: o que vier do site com
+    número ou promessa fica em “afirmações a confirmar”.</p>
+  </div>
+  <div class="ler-site-acoes">
+    <input id="ls-site" type="text" placeholder="empresa.com.br" aria-label="Site da empresa" autocomplete="url">
+    <button class="btn" type="button" data-ler-site>Ler o site</button>
+    <button class="btn primario" type="button" data-ler-site="ia">Ler e preencher o perfil com IA</button>
+  </div>
+  <p class="ler-site-status" id="ls-status" role="status" hidden></p>
+</section>
+
+<form id="f-novo" method="post" class="form-secoes">
+  <section class="pane form-sec">
+    <div class="form-exp">
+      <h2>Empresa</h2>
+      <p>O serviço e a cidade viram as perguntas do radar, como “Qual a melhor agência de tráfego pago em Belo Horizonte?”</p>
+    </div>
+    <div class="form-campos">
+      <div class="campo"><label for="n-nome">Nome da empresa</label><input id="n-nome" type="text" name="nome" required placeholder="Ex.: Clínica Sorriso BH"></div>
+      <div class="campo"><label for="n-site">Site</label><input id="n-site" type="text" name="site" required placeholder="clinicasorriso.com.br"></div>
+      <div class="campo"><label for="n-serv">O que a empresa é, como o cliente procura</label>
+        <input id="n-serv" type="text" name="servico" required placeholder="Ex.: clínica odontológica, agência de tráfego pago"></div>
+      <div class="campo duas">
+        <div><label for="n-cid">Cidade</label><input id="n-cid" type="text" name="cidade" required value="Belo Horizonte"></div>
+        <div><label for="n-uf">Estado</label><input id="n-uf" type="text" name="regiao" required value="Minas Gerais"></div>
+      </div>
+      <div class="campo"><label for="n-wa">WhatsApp</label><input id="n-wa" type="text" name="whatsapp" placeholder="31 99999-9999"></div>
+    </div>
+  </section>
+
+  <section class="pane form-sec">
+    <div class="form-exp">
+      <h2>Perfil</h2>
+      <p>Os fatos que os artigos podem usar, um por linha. O que não estiver aqui vira pendência no texto, nunca invenção.</p>
+    </div>
+    <div class="form-campos">
+      <div class="campo"><label for="n-nich">Nichos ou públicos atendidos</label>
+        <textarea id="n-nich" name="nichos" rows="4" placeholder="Ex.: implantes&#10;ortodontia&#10;estética"></textarea></div>
+      <div class="campo"><label for="n-svs">Serviços</label><textarea id="n-svs" name="servicos" rows="3"></textarea></div>
+      <div class="campo"><label for="n-proc">Como trabalha (um passo por linha)</label><textarea id="n-proc" name="processo" rows="3"></textarea></div>
+      <div class="campo"><label for="n-dif">Diferenciais</label><textarea id="n-dif" name="diferenciais" rows="3"></textarea></div>
+      <div class="campo"><label for="n-afir">Afirmações a confirmar com o cliente</label>
+        <textarea id="n-afir" name="afirmacoes" rows="3" placeholder="Números e promessas do site. Os artigos só usam depois de confirmados."></textarea></div>
+      <div class="campo"><label for="n-cli">Clientes citados no site</label><textarea id="n-cli" name="clientes" rows="2"></textarea></div>
+      <div class="campo"><label for="n-apel">Outras formas de escrever o nome (opcional)</label><textarea id="n-apel" name="apelidos" rows="2"></textarea></div>
+      <div class="campo"><label for="n-tom">Tom de voz (opcional)</label><input id="n-tom" type="text" name="tom" placeholder="Direto, próximo e confiante."></div>
+    </div>
+  </section>
+</form>
+{% endblock %}

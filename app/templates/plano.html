@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui with context %}
+{% block titulo %}Plano de ações · {{ c.nome }}{% endblock %}
+{% block trilha %}{{ ui.trilha(c, 'Plano de ações') }}{% endblock %}
+{% block conteudo %}
+{% if acoes %}
+{% set feitas = acoes|selectattr('status', 'equalto', 'feito')|list|length %}
+{% set andamento = acoes|selectattr('status', 'equalto', 'em andamento')|list|length %}
+{% set meta %}{{ acoes|length }} ações a partir do radar de <span class="mono">{{ run.gerado_em|data_br }}</span>, em ordem de impacto{% endset %}
+{% call ui.cabecalho('Plano de ações', meta) %}
+  <div class="prog-cab">
+    <div class="prog-num"><b data-feitas>{{ feitas }}</b><span>/{{ acoes|length }}</span></div>
+    <div><div class="prog-rot">concluídas{% if andamento %} · {{ andamento }} em andamento{% endif %}</div>
+      <div class="progresso"><i style="width:{{ (100 * feitas / acoes|length)|round(1) }}%"></i></div></div>
+  </div>
+  {% if site_novo %}<a class="btn" href="{{ url_for('site_novo', cid=c.id) }}" target="_blank" rel="noopener">Prévia do site novo ↗</a>{% endif %}
+{% endcall %}
+
+<section class="pane mt">
+  <header class="pane-cab"><h2>Ações</h2><span>os guias trazem o passo a passo e os textos prontos</span></header>
+  <ol class="acoes-lista">
+    {% for a in acoes %}
+    <li class="acao{{ ' feito' if a.status == 'feito' }}">
+      <span class="acao-n">{{ '%02d'|format(loop.index) }}</span>
+      <div class="acao-txt"><h3>{{ a.titulo }}</h3><p>{{ a.texto }}</p></div>
+      <div class="acao-guia">
+        {% if a.guia %}<a class="btn peq" href="{{ url_for('guia', cid=c.id, nome=a.guia) }}">Abrir o guia →</a>
+        {% elif 'conteúdo' in a.titulo.lower() or 'blog' in a.titulo.lower() %}<a class="btn peq" href="{{ url_for('conteudo', cid=c.id) }}">Ir para o conteúdo →</a>{% endif %}
+      </div>
+      {{ ui.status_acao(c, a) }}
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% else %}
+{{ ui.cabecalho('Plano de ações', 'O plano nasce do radar.') }}
+<div class="vazio-estado">
+  <h2>Cada achado do radar vira uma ação aqui.</h2>
+  <p>Rode o radar para descobrir o que impede as IAs de indicarem a {{ c.nome }}.</p>
+  <div class="acoes"><a class="btn primario" href="{{ url_for('radar', cid=c.id) }}">Ir para o radar</a></div>
+</div>
+{% endif %}
+{% endblock %}

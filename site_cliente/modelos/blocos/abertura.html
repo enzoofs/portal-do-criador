@@ -1,0 +1,12 @@
+<section class="abertura" id="{{ bloco.id or 'inicio' }}">
+  {% if bloco.imagem_fundo %}<div class="fundo-img" style="background-image:url('{{ raiz }}assets/{{ bloco.imagem_fundo }}')"></div>{% endif %}
+  <div class="cx">
+    {% if bloco.olho %}<p class="olho">{{ bloco.olho }}</p>{% endif %}
+    <h1>{{ bloco.titulo }}{% if bloco.titulo_destaque %} <em>{{ bloco.titulo_destaque }}</em>{% endif %}</h1>
+    {% if bloco.subtitulo %}<p class="sub">{{ bloco.subtitulo }}</p>{% endif %}
+    <div class="acoes">
+      <a class="btn btn-amarelo" href="{{ link_whatsapp }}">{{ bloco.botao or 'Falar no WhatsApp' }}</a>
+      {% if bloco.botao2_texto and bloco.botao2_pagina is not none %}<a class="btn btn-linha" href="{{ link_pagina(bloco.botao2_pagina) }}">{{ bloco.botao2_texto }}</a>{% endif %}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui with context %}
+{% import "_pendencias.html" as pend %}
+{% block titulo %}{{ a.titulo }} · {{ c.nome }}{% endblock %}
+{% block trilha %}<a href="{{ url_for('inicio') }}">Carteira</a><span>/</span><a href="{{ url_for('radar', cid=c.id) }}">{{ c.nome }}</a><span>/</span>
+<a href="{{ url_for('conteudo', cid=c.id) }}">Conteúdo</a><span>/</span><b>Artigo {{ '%02d'|format(numero) if numero else '' }}</b>{% endblock %}
+{% block conteudo %}
+{% set st = a.status or 'rascunho' %}
+{% set meta %}<span class="etapa-etq s-{{ st|replace(' ', '-') }}">{{ st }}</span>
+  <span class="mono">{{ a.palavras|milhar }}</span> palavras ·
+  {% if a.pendencias %}<span class="pend">{{ a.pendencias|length }} pendência{{ 's' if a.pendencias|length > 1 }}</span>{% else %}sem pendências{% endif %}
+  {%- if tema.pergunta_alvo %} · responde a “{{ tema.pergunta_alvo }}”{% endif %}
+  {%- if a.demo %} <span class="etq demo">demonstração</span>{% endif %}{% endset %}
+{% call ui.cabecalho(a.titulo, meta, compacto=True) %}
+  <a class="btn leve" href="{{ url_for('conteudo', cid=c.id) }}#{{ a.slug }}">← Pauta</a>
+  {% if a.wordpress %}<a class="btn leve" href="{{ a.wordpress.editar }}" target="_blank" rel="noopener">Abrir no {{ destino }} ↗</a>{% endif %}
+  <button class="btn" form="f-artigo" name="acao" value="salvar">Salvar <kbd>Ctrl S</kbd></button>
+  {% if st == 'rascunho' %}
+    <button class="btn primario" form="f-artigo" name="acao" value="aprovar"{% if a.pendencias %} title="Resolva as pendências antes de aprovar"{% endif %}>Aprovar</button>
+  {% else %}
+    <button class="btn leve" form="f-artigo" name="acao" value="reabrir">Voltar para rascunho</button>
+  {% endif %}
+  {% if a.status == 'aprovado' %}
+    <button class="btn acento" form="f-artigo" name="acao" value="wordpress">Enviar ao {{ destino }}</button>
+  {% endif %}
+{% endcall %}
+
+<div class="editor-app">
+  <form id="f-artigo" class="pane ed-form" method="post">
+    <header class="pane-cab"><h2>Texto</h2><span>pendências: responda na aba ao lado</span></header>
+    <div class="pane-corpo form">
+      <div class="campo"><label for="f-titulo">Título</label><input id="f-titulo" type="text" name="titulo" value="{{ a.titulo }}"></div>
+      <div class="campo"><label for="f-mt">Título no Google <span class="cont" data-cont="meta_titulo"></span></label>
+        <input id="f-mt" type="text" name="meta_titulo" value="{{ a.meta_titulo }}" data-max="60"></div>
+      <div class="campo"><label for="f-md">Descrição no Google <span class="cont" data-cont="meta_descricao"></span></label>
+        <textarea id="f-md" name="meta_descricao" rows="3" data-max="155" class="baixa">{{ a.meta_descricao }}</textarea></div>
+      <div class="campo"><label for="f-rd">Resposta rápida (topo do artigo)</label>
+        <textarea id="f-rd" name="resposta_direta" rows="4">{{ a.resposta_direta }}</textarea></div>
+      <div class="campo"><label for="f-corpo">Corpo em Markdown</label>
+        <textarea id="f-corpo" class="md" name="corpo_markdown">{{ a.corpo_markdown }}</textarea></div>
+      <div class="campo"><label>Perguntas frequentes</label>
+        <div class="faq">
+        {% for f in a.faq %}
+          <div class="faq-item"><input type="text" name="faq_pergunta" value="{{ f.pergunta }}" aria-label="Pergunta">
+            <textarea name="faq_resposta" rows="2" class="baixa" aria-label="Resposta">{{ f.resposta }}</textarea></div>
+        {% endfor %}
+          <div class="faq-item nova"><input type="text" name="faq_pergunta" placeholder="Nova pergunta (opcional)" aria-label="Nova pergunta">
+            <textarea name="faq_resposta" rows="2" class="baixa" placeholder="Resposta" aria-label="Resposta"></textarea></div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <section class="pane ed-lado">
+    <header class="pane-cab abas-p" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-aba="previa">Prévia</button>
+      <button type="button" role="tab" aria-selected="false" data-aba="google">Google</button>
+      <button type="button" role="tab" aria-selected="false" data-aba="pend">Pendências <b class="{{ 'pend' if a.pendencias }}">{{ a.pendencias|length }}</b></button>
+      <button type="button" role="tab" aria-selected="false" data-aba="redes">Redes</button>
+      <button type="button" role="tab" aria-selected="false" data-aba="especialista">Especialista <b>{{ (a.perguntas_especialista or [])|length }}</b></button>
+    </header>
+    <div class="ed-painel" data-painel="previa" role="tabpanel">
+      <article class="previa"><h1>{{ a.titulo }}</h1>{{ previa }}</article>
+    </div>
+    <div class="ed-painel" data-painel="google" role="tabpanel" hidden>
+      <div class="pane-corpo">
+        <div class="sub-rot">Como aparece na busca</div>
+        <div class="serp"><div class="t">{{ a.meta_titulo }}</div><div class="u">{{ url_post }}</div><div class="d">{{ a.meta_descricao }}</div></div>
+        <dl class="insp-dl">
+          {% if tema.palavra_chave %}<div><dt>Palavra-chave</dt><dd>{{ tema.palavra_chave }}</dd></div>{% endif %}
+          {% if tema.perguntas_relacionadas %}<div><dt>Perguntas relacionadas</dt><dd><ul>{% for p in tema.perguntas_relacionadas %}<li>{{ p }}</li>{% endfor %}</ul></dd></div>{% endif %}
+          {% if tema.angulo %}<div><dt>Ângulo</dt><dd>{{ tema.angulo }}</dd></div>{% endif %}
+        </dl>
+      </div>
+    </div>
+    <div class="ed-painel" data-painel="pend" role="tabpanel" hidden>
+      <div class="pane-corpo">
+        {% if pend_itens %}
+        <p class="nota">O redator não inventa números, cases nem clientes. Responda cada item aqui: o texto do artigo
+        é atualizado sozinho quando você salva.</p>
+        {{ pend.campos(pend_itens, form='f-artigo') }}
+        <div class="pend-fim">
+          <button class="btn primario" form="f-artigo" name="acao" value="salvar">Salvar respostas</button>
+          <a class="btn leve" href="{{ url_for('especialista', cid=c.id) }}">Todas as pendências do cliente</a>
+        </div>
+        {% else %}<p class="nota">Nenhuma pendência no texto. Pode aprovar.</p>{% endif %}
+      </div>
+    </div>
+    <div class="ed-painel" data-painel="redes" role="tabpanel" hidden>
+      <div class="pane-corpo redes">
+        <p class="nota">Feitos a partir deste artigo, para copiar e revisar. Nada é publicado nas redes pelo sistema.
+        {% if a.pendencias %}<b class="pend">Resolva as pendências antes de usar.</b>{% endif %}</p>
+        <div class="sub-rot primeiro">LinkedIn</div>
+        <textarea id="rd-linkedin" rows="10" readonly>{{ redes.linkedin }}</textarea>
+        <button class="btn" type="button" data-copiar="#rd-linkedin" data-aviso="Post do LinkedIn copiado.">Copiar post</button>
+        <div class="sub-rot">Instagram · carrossel de {{ redes.slides|length }} telas</div>
+        <ol class="slides">{% for s in redes.slides %}<li><b>{{ s.titulo }}</b><span>{{ s.texto }}</span></li>{% endfor %}</ol>
+        <textarea id="rd-slides" hidden>{% for s in redes.slides %}Tela {{ loop.index }}: {{ s.titulo }}
+{{ s.texto }}
+
+{% endfor %}</textarea>
+        <button class="btn" type="button" data-copiar="#rd-slides" data-aviso="Textos do carrossel copiados.">Copiar telas</button>
+        <div class="sub-rot">Legenda</div>
+        <textarea id="rd-legenda" rows="5" readonly>{{ redes.legenda }}</textarea>
+        <button class="btn" type="button" data-copiar="#rd-legenda" data-aviso="Legenda copiada.">Copiar legenda</button>
+      </div>
+    </div>
+    <div class="ed-painel" data-painel="especialista" role="tabpanel" hidden>
+      <div class="pane-corpo">
+        <p class="nota">Perguntas que tornam o texto único. As respostas (até por áudio) entram no artigo.</p>
+        <ol class="insp-lista">{% for p in a.perguntas_especialista or [] %}<li>{{ p }}</li>{% endfor %}</ol>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

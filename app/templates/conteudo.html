@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui with context %}
+{% block titulo %}Conteúdo · {{ c.nome }}{% endblock %}
+{% block trilha %}{{ ui.trilha(c, 'Conteúdo') }}{% endblock %}
+{% block conteudo %}
+{% set a_escrever = q.colunas['a escrever'] %}
+{% set meta %}{% if q.pauta %}Pauta de <span class="mono">{{ q.pauta.gerado_em|data_br }}</span>
+  · {{ v.linhas|length }} artigos, um para cada pergunta em que a marca não apareceu
+  {%- if v.palavras %} · <span class="mono">{{ v.palavras|milhar }}</span> palavras escritas{% endif %}
+  {%- if q.pauta.demo %} <span class="etq demo">demonstração</span>{% endif %}
+{% else %}Sem pauta ainda.{% endif %}{% endset %}
+{% call ui.cabecalho('Conteúdo', meta) %}
+  {% if v.pendencias %}<a class="btn" href="{{ url_for('especialista', cid=c.id) }}">Responder pendências <b class="pend mono">{{ v.pendencias }}</b></a>{% endif %}
+  {% if v.especialista %}<button class="btn leve" type="button" data-copiar="#texto-especialista" data-aviso="Perguntas copiadas. Cole no WhatsApp ou no e-mail do cliente.">Copiar perguntas para o especialista</button>{% endif %}
+  {% if q.pauta %}<button class="btn leve" data-tarefa="pauta" data-cliente="{{ c.id }}" {% if radar_demo %}data-demo{% endif %}>Nova pauta</button>{% endif %}
+  {% if v.proximo %}<a class="btn {{ '' if a_escrever else 'primario' }}" href="{{ url_for('artigo', cid=c.id, slug=v.proximo.slug) }}">{{ v.proximo.rotulo }} →</a>{% endif %}
+  {% if a_escrever %}
+  <button class="btn primario" data-tarefa="artigos" data-cliente="{{ c.id }}" {% if q.pauta.demo %}data-demo{% endif %}
+    data-temas="{{ a_escrever|map(attribute='numero')|join(',') }}">Escrever os {{ a_escrever|length }} pendentes</button>
+  {% endif %}
+{% endcall %}
+
+{% if q.pauta %}
+<div class="fluxo" role="group" aria-label="Etapas do conteúdo · clique para filtrar">
+  {% for e in v.etapas %}
+  <button type="button" class="etapa{{ ' foco' if e.status == v.foco }}{{ ' vazia' if not e.n }}" data-filtro="{{ e.status }}"
+    data-vazio="{{ e.vazio }}" aria-pressed="false">
+    <span class="etapa-k"><i>{{ loop.index }}</i>{{ e.rotulo }}</span>
+    <span class="etapa-n">{{ e.n }}</span>
+    <span class="etapa-d">{{ e.desc }}</span>
+  </button>
+  {% endfor %}
+</div>
+
+<div class="mestre-detalhe">
+  <section class="pane lista-art">
+    <header class="pane-cab"><h2>Pauta</h2>
+      <span data-filtro-rot>{{ v.linhas|length }} artigos</span>
+      <button type="button" class="link" data-filtro="" hidden>mostrar todos</button></header>
+    <table class="tab tab-art">
+      <colgroup><col style="width:52px"><col><col style="width:86px"><col style="width:58px"><col style="width:128px"></colgroup>
+      <thead><tr><th class="n">Nº</th><th>Artigo</th>
+        <th class="num">Palavras</th><th class="num" title="Pendências">Pend.</th><th>Etapa</th></tr></thead>
+      <tbody>
+      {% for l in v.linhas %}
+      {% set a = l.artigo %}
+      <tr id="{{ l.tema.slug }}" data-slug="{{ l.tema.slug }}" data-status="{{ l.status }}" tabindex="0"
+        data-href="{{ url_for('artigo', cid=c.id, slug=l.tema.slug) if a else '' }}">
+        <td class="n">{{ '%02d'|format(l.numero) }}</td>
+        <td>{% if a %}<a class="t" href="{{ url_for('artigo', cid=c.id, slug=l.tema.slug) }}">{{ a.titulo }}</a>
+          {% else %}<span class="t">{{ l.tema.titulo }}</span>{% endif %}
+          <span class="sub"><span class="nicho">{{ l.tema.nicho }}</span>“{{ l.tema.pergunta_alvo }}”</span></td>
+        <td class="num mono">{{ a.palavras|milhar if a else '—' }}</td>
+        <td class="num mono{{ ' pend' if a and a.pendencias }}">{{ a.pendencias|length if a else '—' }}</td>
+        <td><span class="etapa-etq s-{{ l.status|replace(' ', '-') }}">{{ ROTULO_ETAPA.get(l.status, l.status) }}</span></td>
+      </tr>
+      {% endfor %}
+      <tr class="sem-itens" hidden><td colspan="5" data-sem-itens></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <aside class="pane insp" aria-live="polite" data-insp>
+    <div class="insp-vazio">Selecione um artigo para ver o resumo.</div>
+  </aside>
+</div>
+
+{% for l in v.linhas %}{% set a = l.artigo %}{% set t = l.tema %}
+<template id="insp-{{ t.slug }}">
+  <header class="pane-cab"><h2>Artigo {{ '%02d'|format(l.numero) }}</h2><span class="etapa-etq s-{{ l.status|replace(' ', '-') }}">{{ ROTULO_ETAPA.get(l.status, l.status) }}</span></header>
+  <div class="insp-corpo" tabindex="0" role="region" aria-label="Resumo do artigo">
+    <div class="insp-tags"><span class="etq">Prioridade {{ t.prioridade }}</span><span class="etq">{{ t.nicho }}</span></div>
+    <h3 class="insp-t">{{ a.titulo if a else t.titulo }}</h3>
+    <dl class="insp-dl">
+      <div><dt>Responde a</dt><dd>“{{ t.pergunta_alvo }}”</dd></div>
+      {% if t.palavra_chave %}<div><dt>Palavra-chave</dt><dd>{{ t.palavra_chave }}</dd></div>{% endif %}
+      {% if t.angulo %}<div><dt>Ângulo</dt><dd>{{ t.angulo }}</dd></div>{% endif %}
+    </dl>
+    {% if a %}
+    <div class="serp mini"><div class="t">{{ a.meta_titulo }}</div><div class="u">{{ l.url }}</div><div class="d">{{ a.meta_descricao }}</div></div>
+    {% if a.pendencias %}
+    <div class="insp-rot pend">Resolver antes de aprovar · {{ a.pendencias|length }}</div>
+    <ol class="insp-lista">{% for p in a.pendencias %}<li>{{ p }}</li>{% endfor %}</ol>
+    {% endif %}
+    {% if a.perguntas_especialista %}
+    <div class="insp-rot">Perguntas para o especialista · {{ a.perguntas_especialista|length }}</div>
+    <ol class="insp-lista">{% for p in a.perguntas_especialista %}<li>{{ p }}</li>{% endfor %}</ol>
+    {% endif %}
+    {% endif %}
+  </div>
+  <footer class="insp-pe acoes">
+    {% if a %}<a class="btn primario" href="{{ url_for('artigo', cid=c.id, slug=t.slug) }}">Abrir no editor →</a>
+      <span class="mono">{{ a.palavras|milhar }} palavras</span>
+    {% else %}<button class="btn primario" data-tarefa="artigos" data-cliente="{{ c.id }}" {% if q.pauta.demo %}data-demo{% endif %}
+      data-temas="{{ l.numero }}">Escrever este artigo</button>{% endif %}
+  </footer>
+</template>
+{% endfor %}
+<textarea id="texto-especialista" hidden>{{ v.especialista }}</textarea>
+
+{% else %}
+<div class="vazio-estado">
+  <h2>Uma pauta para cada pergunta em que a marca não aparece.</h2>
+  <p>{% if not tem_radar %}Rode o radar primeiro: a pauta nasce das perguntas em que a marca não aparece. {% endif %}A pauta usa o último
+  radar para priorizar os temas com mais chance de colocar a {{ c.nome }} nas respostas das IAs. Depois, cada artigo
+  é escrito, revisado aqui e enviado ao WordPress.</p>
+  <div class="acoes"><button class="btn primario" data-tarefa="pauta" data-cliente="{{ c.id }}" {% if radar_demo %}data-demo{% endif %}>Gerar pauta</button></div>
+</div>
+{% endif %}
+{% endblock %}

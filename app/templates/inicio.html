@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui with context %}
+{% block titulo %}Carteira · Portal do Criador{% endblock %}
+{% block conteudo %}
+{% set meta %}{{ v.clientes|length }} cliente{{ 's' if v.clientes|length != 1 }} · visibilidade nas IAs, conteúdo e plano de cada um{% endset %}
+{% call ui.cabecalho('Carteira', meta) %}
+  <a class="btn primario" href="{{ url_for('novo_cliente') }}">+ Novo cliente</a>
+{% endcall %}
+
+<section class="faixa-kpi solta">
+  <div class="kpi hero">
+    <div class="kpi-k">Visibilidade média</div>
+    <div class="kpi-v">{{ (v.media|round(1))|num if v.media is not none else '—' }}<small>%</small></div>
+    <div class="kpi-l">das respostas de indicação citam os clientes da carteira</div>
+  </div>
+  <div class="kpi"><div class="kpi-k">Artigos</div><div class="kpi-v">{{ v.escritos }}</div>
+    <div class="kpi-l">escritos de {{ v.temas }} na pauta</div></div>
+  <div class="kpi"><div class="kpi-k">Publicados</div><div class="kpi-v">{{ v.publicados }}</div>
+    <div class="kpi-l">no site do cliente</div></div>
+  <div class="kpi {{ 'alerta' if v.pendencias }}"><div class="kpi-k">Pendências</div><div class="kpi-v">{{ v.pendencias }}</div>
+    <div class="kpi-l">dados para o cliente confirmar</div></div>
+  <div class="kpi"><div class="kpi-k">Plano</div><div class="kpi-v">{{ v.acoes_feitas }}<small>/{{ v.acoes }}</small></div>
+    <div class="kpi-l">ações concluídas</div></div>
+</section>
+
+<section class="pane mt">
+  <header class="pane-cab"><h2>Clientes</h2></header>
+  <table class="tab tab-carteira">
+    <thead><tr><th>Cliente</th><th class="num">Visibilidade</th><th>Quem as IAs indicam no lugar</th>
+      <th>Conteúdo</th><th>Plano</th><th>Último radar</th></tr></thead>
+    <tbody>
+    {% for k in v.clientes %}
+    <tr data-href="{{ url_for('radar', cid=k.c.id) }}">
+      <td><a class="t" href="{{ url_for('radar', cid=k.c.id) }}">{{ k.c.nome }}</a>
+        <span class="sub">{{ k.c.segmento }} · {{ k.c.cidade }}</span></td>
+      {% if k.resumo %}
+      <td class="num"><span class="grande{{ ' baixo' if k.resumo.visibilidade < 30 }}">{{ k.resumo.visibilidade|num }}%</span>
+        <span class="sub">{{ k.resumo.mencoes }} de {{ k.resumo.respostas_descoberta }} respostas</span></td>
+      <td>{% if k.lider %}{{ k.lider.nome }}<span class="sub">{{ k.lider.respostas }} de {{ k.resumo.respostas_descoberta }} respostas · {{ k.resumo.concorrentes }} concorrentes no total</span>{% else %}—{% endif %}</td>
+      {% else %}
+      <td class="num">—</td><td><span class="sub">Radar ainda não rodado</span></td>
+      {% endif %}
+      <td>{{ k.escritos }} de {{ k.temas }} escritos<span class="barrinha"><i style="width:{{ (100 * k.publicados / k.temas) if k.temas else 0 }}%"></i></span>
+        <span class="sub">{{ k.publicados }} publicado{{ 's' if k.publicados != 1 }}{% if k.pendencias %} · <span class="pend">{{ k.pendencias }} pendência{{ 's' if k.pendencias != 1 }}</span>{% endif %}</span></td>
+      <td>{{ k.acoes_feitas }} de {{ k.acoes }}<span class="barrinha"><i style="width:{{ (100 * k.acoes_feitas / k.acoes) if k.acoes else 0 }}%"></i></span>
+        <span class="sub">ações concluídas</span></td>
+      <td>{% if k.run %}<span class="mono">{{ k.run.gerado_em|data_br }}</span>{% if k.run.demo %}<span class="sub pend">demonstração</span>{% endif %}{% else %}—{% endif %}</td>
+    </tr>
+    {% endfor %}
+    <tr class="novo-lin" data-href="{{ url_for('novo_cliente') }}"><td colspan="6"><a href="{{ url_for('novo_cliente') }}">+ Novo cliente</a>
+      <span class="sub">Cadastre a empresa e rode o primeiro radar. A demonstração é grátis.</span></td></tr>
+    </tbody>
+  </table>
+</section>
+{% endblock %}

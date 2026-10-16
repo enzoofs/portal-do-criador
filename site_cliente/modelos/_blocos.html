@@ -1,0 +1,52 @@
+{# Blocos repetidos entre a home e as páginas internas. Importar "with context" (usa `previa`). #}
+
+{% macro preencher(valor, rotulo) -%}
+{%- if valor %}{{ valor }}{% elif previa %}<span class="preencher">{{ rotulo }}</span>{% endif -%}
+{%- endmacro %}
+
+{% macro numeros(lista) -%}
+<section class="numeros" aria-label="Números">
+  <div class="cx"><ul>
+    {% for n in lista %}<li><b>{{ n.valor }}</b><span>{{ n.rotulo }}</span></li>{% endfor %}
+  </ul></div>
+</section>
+{%- endmacro %}
+
+{% macro cartoes_blog(artigos, raiz, prefixo='blog/') -%}
+<ul class="blog-cards">
+  {% for a in artigos %}
+  <li class="blog-card"><a href="{{ raiz }}{{ prefixo }}{{ a.slug }}/">
+    <span class="tag">{{ a.tag }}</span><h3>{{ a.titulo }}</h3><p>{{ a.meta_descricao }}</p>
+    <span class="meta">{{ a.minutos }} min de leitura</span><span class="ler">Ler o artigo →</span></a></li>
+  {% endfor %}
+</ul>
+{%- endmacro %}
+
+{% macro perguntas(lista, id='perguntas', titulo='O que costumam perguntar antes de começar') -%}
+<section class="bloco" id="{{ id }}">
+  <div class="cx">
+    <div class="cab-bloco"><p class="olho">Perguntas frequentes</p><h2>{{ titulo }}</h2></div>
+    <div class="perguntas">
+      {% for p in lista %}<details><summary>{{ p.pergunta }}</summary><p>{{ p.resposta }}</p></details>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{%- endmacro %}
+
+{% macro chamada_final(s, link_whatsapp, raiz) -%}
+<section class="final" id="garantia">
+  <div class="cx">
+    <div class="faixa-txt">
+      <img class="selo" src="{{ raiz }}assets/{{ s.marca.icone }}" alt="" width="56" height="52">
+      <p class="olho">Sem risco</p>
+      <h2>{{ s.garantia.titulo }}</h2>
+      <p>{{ s.garantia.texto }}</p>
+      <div class="acoes">
+        <a class="btn btn-amarelo" href="{{ link_whatsapp }}">Falar no WhatsApp</a>
+        {% if s.empresa.formulario %}<a class="btn btn-linha" href="{{ s.empresa.formulario }}">Preencher o formulário</a>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{%- endmacro %}

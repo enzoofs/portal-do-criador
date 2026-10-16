@@ -1,0 +1,37 @@
+# Configuração das ferramentas de qualidade. O projeto roda no lugar (python main.py ...)
+# e não é distribuído como pacote: as dependências ficam em requirements.txt (faixas
+# aceitas) e requirements-lock.txt (versões exatas testadas).
+
+[tool.ruff]
+target-version = "py311"
+line-length = 140
+extend-exclude = ["venv", "data", "relatorios", "entregas"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes: imports e variáveis sem uso, nomes indefinidos
+    "I",        # ordem dos imports
+    "B",        # bugbear: armadilhas comuns
+    "S",        # bandit: segurança
+    "C4",       # comprehensions
+    "PIE",
+    "RUF",
+    "UP",       # sintaxe moderna para a versão mínima
+]
+ignore = [
+    "E501",                          # o comprimento de linha fica a cargo da revisão
+    "RUF001", "RUF002", "RUF003",    # acentos, travessões e aspas tipográficas em português são intencionais
+]
+
+[tool.ruff.lint.per-file-ignores]
+"testes.py" = ["S101"]               # assert é a forma de checar nos testes
+
+[tool.bandit]
+exclude_dirs = ["venv", "data", "relatorios", "entregas"]
+skips = ["B101"]                     # assert só aparece em testes.py
+
+[tool.pytest.ini_options]
+# Os testes também rodam sem pytest: python testes.py
+python_files = ["testes.py"]
+python_functions = ["teste_*"]

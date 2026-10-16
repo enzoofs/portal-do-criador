@@ -1,0 +1,8 @@
+<section class="blog-topo">
+  <div class="cx">
+    <p class="trilha"><a href="{{ raiz or './' }}">Início</a> / {{ pagina.menu or bloco.titulo }}</p>
+    <h1>{{ bloco.titulo }}</h1>
+    {% if bloco.resumo %}<p>{{ bloco.resumo }}</p>{% endif %}
+    {% if bloco.mostrar_botao %}<div class="acoes" style="margin-top:28px"><a class="btn btn-amarelo" href="{{ link_whatsapp }}">Falar com a {{ s.empresa.nome }}</a></div>{% endif %}
+  </div>
+</section>

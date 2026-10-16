@@ -1,0 +1,14 @@
+<section class="bloco" id="{{ bloco.id or 'como-trabalhamos' }}">
+  <div class="cx">
+    {% include "blocos/_cab.html" %}
+    {% if bloco.estilo == 'lista' %}
+    <ol class="etapas-lista">{% for et in bloco.etapas %}<li><b>{{ et.nome }}.</b> {{ et.texto }}</li>{% endfor %}</ol>
+    {% else %}
+    <ol class="etapas">
+      {% for et in bloco.etapas %}
+      <li>{% if et.imagem %}<img src="{{ raiz }}assets/{{ et.imagem }}" alt="" width="112" height="112" loading="lazy">{% endif %}<span class="n">ETAPA {{ loop.index }}</span><h3>{{ et.nome }}</h3>{% if et.texto %}<p>{{ et.texto }}</p>{% endif %}</li>
+      {% endfor %}
+    </ol>
+    {% endif %}
+  </div>
+</section>

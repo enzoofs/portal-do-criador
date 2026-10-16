@@ -1,0 +1,6 @@
+<section class="bloco" id="{{ bloco.id or 'servicos' }}">
+  <div class="cx">
+    {% include "blocos/_cab.html" %}
+    <div class="servicos">{% for x in bloco.itens %}<div><h3>{{ x.nome }}</h3>{% if x.texto %}<p>{{ x.texto }}</p>{% endif %}</div>{% endfor %}</div>
+  </div>
+</section>

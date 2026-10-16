@@ -1,0 +1,9 @@
+<section class="bloco" id="{{ bloco.id or 'texto-' ~ loop_bloco }}">
+  <div class="cx leitura">
+    {% if bloco.olho or bloco.titulo %}<div class="cab-bloco">{% if bloco.olho %}<p class="olho">{{ bloco.olho }}</p>{% endif %}{% if bloco.titulo %}<h2>{{ bloco.titulo }}</h2>{% endif %}</div>{% endif %}
+    {% for sec in bloco.secoes %}
+    {% if sec.titulo %}<h2>{{ sec.titulo }}</h2>{% endif %}
+    {% for par in paragrafos(sec.texto) %}<p>{{ par }}</p>{% endfor %}
+    {% endfor %}
+  </div>
+</section>

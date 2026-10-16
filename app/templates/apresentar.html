@@ -1,0 +1,355 @@
+{% import "_ui.html" as ui with context %}<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radar de IA · {{ c.nome }} · apresentação</title>
+<style>
+@font-face{font-family:'Geist';font-weight:400;font-display:block;src:url(/fontes/geist-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Geist';font-weight:500;font-display:block;src:url(/fontes/geist-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Geist';font-weight:600;font-display:block;src:url(/fontes/geist-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Geist Mono';font-weight:400;font-display:block;src:url(/fontes/geist-mono-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Geist Mono';font-weight:500;font-display:block;src:url(/fontes/geist-mono-latin-500-normal.woff2) format('woff2')}
+{{ css_base }}
+/* Modo apresentação: palco fixo de 1600×900 escalado para a janela. Direto: uma família (Geist),
+   títulos em semibold, linhas de 1px, cantos retos, um acento só. Páginas escuras e claras se
+   alternam para dar ritmo; o número da página fica no alto, à direita. */
+:root{--acento-claro:#e5835f;--acento-texto:#9e3517;--m:96px}
+html,body{height:100%;margin:0;overflow:hidden;background:#1d2030}
+body{display:grid;place-items:center;cursor:default}
+.palco{position:relative;width:1600px;height:900px;transform-origin:center;flex:none}
+.slide{position:absolute;inset:0;background:var(--paper);color:var(--ink);opacity:0;visibility:hidden;
+ transition:opacity .35s ease,visibility 0s .35s;overflow:hidden}
+.slide.ativo{opacity:1;visibility:visible;transition:opacity .35s ease}
+.slide.escuro{background:var(--ink);color:#eeeef2}
+.folio,.rodape{position:absolute;left:var(--m);right:var(--m);display:flex;justify-content:space-between;
+ font:500 13px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.escuro .folio,.escuro .rodape{color:#c9cbd6}  /* cor explícita em vez de opacidade: contraste AA nos dois fundos */
+.folio{top:44px;padding-bottom:18px;border-bottom:1px solid currentColor}
+.rodape{bottom:40px;padding-top:16px;border-top:1px solid currentColor}
+.folio .demo{color:var(--acento-texto)}
+.escuro .folio .demo{color:#f4a081}
+.corpo{position:absolute;left:var(--m);right:var(--m);top:124px;bottom:120px}
+.sec{font:500 14px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.escuro .sec{color:var(--acento-claro)}
+h1,h2{font-family:var(--sans);font-weight:600;margin:0;max-width:none}
+h1{font-size:80px;line-height:1.04;letter-spacing:-.035em}
+h2{font-size:52px;line-height:1.1;letter-spacing:-.03em}
+h1 em,h2 em{font-style:normal;color:var(--accent)}
+.escuro h1 em,.escuro h2 em{color:var(--acento-claro)}
+.mono{font:500 14px/1.6 var(--mono);letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+
+/* capa */
+.capa .corpo{display:grid;grid-template-columns:1fr 360px;gap:64px;align-items:end}
+.capa h1{margin-top:32px;max-width:17ch}
+.capa .mono{margin-top:40px}
+.capa .hex{width:340px;height:auto;color:#eeeef2;opacity:.85;margin-bottom:18px}
+
+/* número herói */
+.heroi .corpo{display:grid;grid-template-columns:auto 1fr;gap:72px;align-items:end}
+.gigante{font:600 440px/.74 var(--sans);letter-spacing:-.07em;font-variant-numeric:tabular-nums;color:var(--accent);
+ margin-left:-14px}
+.gigante small{font-size:.3em;letter-spacing:-.03em;color:var(--ink);margin-left:12px}
+.escuro .gigante{color:var(--acento-claro)}
+.escuro .gigante small{color:#eeeef2}
+.heroi h2{font-size:48px;max-width:16ch}
+.heroi p{font:400 23px/1.5 var(--sans);margin:28px 0 0;max-width:46ch;opacity:.8}
+
+/* ranking */
+.barras-s{display:grid;grid-template-columns:340px 1fr 120px;gap:15px 28px;align-items:center;margin-top:20px}
+.barras-s .n{font:400 25px/1.2 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barras-s .b{height:22px;background:var(--bar)}
+.barras-s .v{font:500 18px var(--mono);text-align:right;opacity:.75}
+.barras-s .marca .n,.barras-s .marca .v{color:var(--accent);font-weight:600;opacity:1}
+.barras-s .marca .b{background:var(--accent)}
+.barras-s .zero{width:5px;height:30px;background:var(--accent)}
+.barras-s>div{display:contents}
+
+/* cada IA */
+.duas-ias{display:grid;grid-template-columns:1fr 1fr;gap:64px;margin-top:44px}
+.lista-ia{list-style:none;margin:0;padding:0}
+.lista-ia li{display:flex;justify-content:space-between;padding:13px 0;border-top:1px solid rgba(45,49,66,.2);font:400 24px/1.25 var(--sans)}
+.lista-ia li span{font:500 18px var(--mono);opacity:.7}
+.lista-ia li.marca{color:var(--accent)}
+.lista-ia li.marca b{font-weight:600}
+
+/* composição das fontes */
+.fontes .corpo{display:flex;flex-direction:column;justify-content:flex-end}
+.fontes h2{font-size:48px}
+.comp-s{display:flex;gap:4px;height:56px;margin-top:56px}
+.comp-s i{display:block}
+.leg-s{display:grid;grid-template-columns:repeat(4,1fr);margin-top:22px;border-top:1px solid rgba(238,238,242,.25)}
+.leg-s div{padding:18px 18px 0 0;font:400 20px/1.35 var(--sans)}
+.leg-s b{display:block;font:600 44px/1 var(--sans);letter-spacing:-.03em;margin-bottom:8px}
+.leg-s .sw{display:inline-block;width:12px;height:12px;margin-right:10px}
+.t-concorrente{background:var(--acento-claro)}.t-terceiro{background:#8a93ab}.t-plataforma{background:#5d667e}.t-marca{background:#c8cbd3}
+
+/* tabelas */
+.tab-s{width:100%;border-collapse:collapse;margin-top:12px}
+.tab-s td{padding:17px 24px 17px 0;border-top:1px solid rgba(45,49,66,.2);font:400 22px/1.3 var(--sans);vertical-align:baseline}
+.tab-s tr:last-child td{border-bottom:1px solid rgba(45,49,66,.2)}
+.tab-s .i{font:500 15px var(--mono);opacity:.55;width:56px}
+.tab-s b{font-weight:600}
+.tab-s .cam{opacity:.6}
+.tab-s .tp{font:500 13px var(--mono);letter-spacing:.08em;text-transform:uppercase;opacity:.6;white-space:nowrap}
+.tab-s .tp.concorrente{color:var(--accent);opacity:1}
+.tab-s .x{font:500 18px var(--mono);text-align:right;white-space:nowrap}
+
+/* citação */
+.citacao .corpo{display:grid;grid-template-columns:1fr;align-content:end}
+.citacao h2{font-size:60px;max-width:22ch;margin-top:30px}
+.citacao blockquote{margin:40px 0 0;padding-left:28px;border-left:3px solid var(--acento-claro);
+ font:400 25px/1.55 var(--sans);max-width:64ch;opacity:.85}
+
+/* checagens */
+.checks-s{list-style:none;margin:28px 0 0;padding:0;display:grid;gap:0}
+.checks-s li{display:grid;grid-template-columns:52px 1fr auto;gap:24px;align-items:baseline;padding:20px 0;
+ border-top:1px solid rgba(45,49,66,.2);font:400 26px/1.3 var(--sans)}
+.checks-s li:last-child{border-bottom:1px solid rgba(45,49,66,.2)}
+.checks-s .ic{width:38px;height:38px;display:grid;place-items:center;font:600 20px var(--sans);border:1.5px solid var(--good);color:var(--good);align-self:center}
+.checks-s .falha .ic{background:var(--accent);border-color:var(--accent);color:#fff}
+.checks-s .det{font:500 14px var(--mono);letter-spacing:.04em;opacity:.6;max-width:44ch;text-align:right}
+
+/* listas numeradas em duas colunas */
+.lista-s{list-style:none;margin:20px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;column-gap:64px;
+ grid-auto-flow:column;grid-template-rows:repeat(var(--linhas),auto)}
+.lista-s li{display:grid;grid-template-columns:64px 1fr;gap:6px 0;padding:20px 0;border-top:1px solid rgba(45,49,66,.2)}
+.lista-s .num{font:500 20px/1.25 var(--mono);color:var(--accent);grid-row:span 2}
+.lista-s b{font:500 24px/1.25 var(--sans)}
+.lista-s span{font:400 19px/1.4 var(--sans);opacity:.65}
+.lista-s.compacta li{padding:16px 0}
+.lista-s.compacta b{font-size:22px}
+.lista-s.compacta span{font-size:18px}
+
+/* fecho */
+.fecho .corpo{display:grid;align-content:end}
+.fecho h1{font-size:96px;max-width:14ch}
+.ciclo{display:flex;gap:28px;align-items:center;margin-top:52px;font:500 17px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.ciclo span{padding:14px 20px;border:1px solid currentColor}
+.ciclo span.ag{border-color:var(--acento-claro);color:var(--acento-claro)}
+
+/* navegação */
+.progresso-s{position:fixed;left:0;bottom:0;height:3px;background:var(--accent);transition:width .3s}
+.dica{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);font:500 11px var(--mono);letter-spacing:.1em;
+ text-transform:uppercase;color:#b9bccb;background:rgba(29,32,48,.85);padding:8px 14px;animation:some 5s forwards}
+@keyframes some{0%,80%{opacity:1}100%{opacity:0;visibility:hidden}}
+.sair{position:fixed;top:14px;right:16px;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;
+ color:#b9bccb;text-decoration:none;padding:8px 10px;opacity:0;transition:opacity .2s}
+body:hover .sair{opacity:.8}
+@media(prefers-reduced-motion:reduce){.slide,.slide.ativo{transition:none}.dica{animation:none}}
+</style>
+</head>
+<body>
+{% set nome = c.nome %}{% set nome_marca = c.nome %}
+{% set r = run.metricas.resumo %}
+{% set lideres = v.barras|rejectattr('marca')|list %}
+{% set conf = v.marca|selectattr('estado', 'equalto', 'confundiu')|list %}
+{% set escritos = conteudo.linhas|selectattr('artigo')|list %}
+
+{# Os slides sem dados (marca, site, páginas, conteúdo) ficam de fora; o fólio conta só os que entram. #}
+{% macro folio(n, total) -%}
+<div class="folio"><span>TimeLabs · Radar de IA · {{ nome }}{% if run.demo %} · <span class="demo">demonstração</span>{% endif %}</span>
+  <span>{{ '%02d'|format(n) }} / {{ '%02d'|format(total) }}</span></div>
+{%- endmacro %}
+{% macro rodape(n) -%}
+<div class="rodape"><span>Portal do Criador</span><span>TimeLabs</span></div>
+{%- endmacro %}
+
+{% set tem_marca = conf|length > 0 %}
+{% set tem_site = v.checks|length > 0 %}
+{% set tem_conteudo = conteudo.linhas|length > 0 %}
+{% set tem_por_ia = v.confianca.por_ia|length > 1 %}
+{% set total = 6 + (1 if tem_por_ia else 0) + (1 if tem_marca else 0) + (1 if tem_site else 0) + (1 if tem_conteudo else 0) + (1 if v.paginas else 0) %}
+{% set ns = namespace(n=0) %}
+
+<div class="palco" id="palco">
+
+{% set ns.n = ns.n + 1 %}
+<section class="slide escuro capa" aria-label="Capa">
+  {{ folio(ns.n, total) }}
+  <div class="corpo">
+    <div>
+      <div class="sec">Radar de visibilidade em IA</div>
+      <h1>Quando alguém pede uma indicação às IAs, a <em>{{ nome }}</em> aparece?</h1>
+      <div class="mono">{{ run.gerado_em|data_extenso }} · {{ v.ias|join(' e ') }} · {{ v.n_perguntas }} perguntas que um cliente faria</div>
+    </div>
+    <svg class="hex" viewBox="0 0 340 300" aria-hidden="true">
+      <path d="M85 4h170l83 146-83 146H85L2 150z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M118 62h104l52 88-52 88H118L66 150z" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+      <circle cx="170" cy="150" r="17" fill="var(--accent)"/></svg>
+  </div>
+  {{ rodape(ns.n) }}
+</section>
+
+{% set ns.n = ns.n + 1 %}
+<section class="slide heroi" aria-label="Resultado">
+  {{ folio(ns.n, total) }}
+  <div class="corpo">
+    <div class="gigante">{{ v.mencoes }}<small>/{{ v.total }}</small></div>
+    <div>
+      <div class="sec">Resultado</div>
+      <h2 style="margin-top:24px">respostas de indicação citaram a <em>{{ nome }}</em>.</h2>
+      <p>Fizemos ao {{ v.ias|join(' e ao ') }} as perguntas que um cliente faz antes de contratar {{ c.segmento.lower() }}
+        em {{ c.cidade }}. {% if v.mencoes %}A marca apareceu em {{ v.mencoes }} das {{ v.total }} respostas.{% else %}Em nenhuma das {{ v.total }} respostas a marca apareceu.{% endif %}</p>
+    </div>
+  </div>
+  {{ rodape(ns.n) }}
+</section>
+
+{% set ns.n = ns.n + 1 %}
+<section class="slide" aria-label="Quem as IAs indicam">
+  {{ folio(ns.n, total) }}
+  <div class="corpo">
+    <div class="sec">Quem as IAs indicam</div>
+    <h2 style="margin-top:22px">No lugar dela, as IAs indicaram {{ v.concorrentes }} empresas.</h2>
+    {% set linhas = lideres[:8] %}
+    {% set marca_lin = v.barras|selectattr('marca')|first %}
+    <div class="barras-s" style="margin-top:44px">
+      {% for b in linhas %}
+      <div><span class="n">{{ b.nome }}</span><span><i class="b" style="display:block;width:{{ '%.1f'|format(b.pct) }}%"></i></span><span class="v">{{ b.n }} de {{ v.total }}</span></div>
+      {% endfor %}
+      {% if marca_lin %}
+      <div class="marca"><span class="n">{{ marca_lin.nome }}</span><span>{% if marca_lin.n %}<i class="b" style="display:block;width:{{ '%.1f'|format(marca_lin.pct) }}%"></i>{% else %}<i class="zero" style="display:block"></i>{% endif %}</span><span class="v">{{ marca_lin.n }} de {{ v.total }}</span></div>
+      {% endif %}
+    </div>
+  </div>
+  {{ rodape(ns.n) }}
+</section>
+
+{% set ns.n = ns.n + 1 %}
+{% if tem_por_ia %}
+{% set ns.n = ns.n + 1 %}
+<section class="slide" aria-label="Cada IA indica empresas diferentes">
+  {{ folio(ns.n, total) }}
+  <div class="corpo">
+    <div class="sec">ChatGPT e Google</div>
+    <h2 style="margin-top:22px">Cada IA indica agências diferentes: só {{ v.confianca.em_todas_ias }} de {{ v.confianca.empresas }} aparecem nas duas.</h2>
+    <div class="duas-ias">
+      {% for p in v.confianca.por_ia %}
+      <div><div class="mono" style="margin-bottom:14px">{{ p.ia }}</div>
+        <ol class="lista-ia">{% for nome, n in p.lideres %}<li><b>{{ nome }}</b><span>{{ n }}×</span></li>{% endfor %}
+          <li class="marca"><b>{{ nome_marca }}</b><span>{{ p.mencoes }}×</span></li></ol></div>
+      {% endfor %}
+    </div>
+  </div>
+  {{ rodape(ns.n) }}
+</section>
+{% endif %}
+
+{% set conc = v.composicao|selectattr('tipo', 'equalto', 'concorrente')|first %}
+<section class="slide escuro fontes" aria-label="Fontes">
+  {{ folio(ns.n, total) }}
+  <div class="corpo">
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:64px;align-items:end">
+      <div class="gigante" style="font-size:330px">{{ conc.pct }}<small>%</small></div>
+      <div><div class="sec">Onde as IAs buscam a resposta</div>
+        <h2 style="margin-top:24px;max-width:18ch">do que as IAs leem para responder são sites de concorrentes.</h2></div>
+    </div>
+    <div class="comp-s">{% for g in v.composicao if g.n %}<i class="t-{{ g.tipo }}" style="flex:{{ g.n }}"></i>{% endfor %}</div>
+    <div class="leg-s">{% for g in v.composicao %}<div><b>{{ g.pct }}%</b><span class="sw t-{{ g.tipo }}"></span>{{ g.rotulo }}</div>{% endfor %}</div>
+  </div>
+  {{ rodape(ns.n) }}
+</section>
+
+{% if v.paginas %}
+{% set ns.n = ns.n + 1 %}
+<section class="slide" aria-label="Páginas consultadas">
+  {{ folio(ns.n, total) }}
+  <div class="corpo">
+    <div class="sec">Páginas que as IAs mais consultaram</div>
+    <h2 style="margin-top:22px">Estar nestas páginas pesa mais que o próprio site.</h2>
+    <table class="tab-s" style="margin-top:36px">
+      {% for p in v.paginas[:6] %}
+      <tr><td class="i">{{ '%02d'|format(loop.index) }}</td>
+        <td><b>{{ p.dominio }}</b><span class="cam">{{ p.caminho|truncate(46, True, '…') if p.caminho != '/' }}</span></td>
+        <td class="tp {{ p.tipo }}">{{ p.rotulo }}</td><td class="x">{{ p.respostas }} respostas</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  {{ rodape(ns.n) }}
+</section>
+{% endif %}
+
+{% if tem_marca %}
+{% set ns.n = ns.n + 1 %}
+{% set x = conf[0] %}
+<section class="slide escuro citacao" aria-label="Quando perguntam pelo nome">
+  {{ folio(ns.n, total) }}
+  <div class="corpo">
+    <div class="sec">Quando perguntam pelo nome</div>
+    <h2>O {{ x.ia }} falou de <em>outra empresa</em>.</h2>
+    <blockquote>{{ x.resumo|truncate(330, True, '…') }}</blockquote>
+  </div>
+  {{ rodape(ns.n) }}
+</section>
+{% endif %}
+
+{% if tem_site %}
+{% set ns.n = ns.n + 1 %}
+<section class="slide" aria-label="O site visto pelas IAs">
+  {{ folio(ns.n, total) }}
+  <div class="corpo">
+    <div class="sec">O site visto pelas IAs</div>
+    <h2 style="margin-top:22px">{{ v.falhas }} de {{ v.checks|length }} checagens do site falharam.</h2>
+    <ul class="checks-s" style="margin-top:40px">
+      {% for ch in v.checks %}
+      <li class="{{ 'ok' if ch.ok else 'falha' }}"><span class="ic">{{ '✓' if ch.ok else '✕' }}</span><span>{{ ch.nome }}</span>
+        <span class="det">{{ ch.detalhe|truncate(64, True, '…') }}</span></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {{ rodape(ns.n) }}
+</section>
+{% endif %}
+
+{% set ns.n = ns.n + 1 %}
+{% set acoes = plano[:8] %}
+<section class="slide" aria-label="O plano">
+  {{ folio(ns.n, total) }}
+  <div class="corpo">
+    <div class="sec">O plano</div>
+    <h2 style="margin-top:22px">O que fazer, em ordem de impacto.</h2>
+    <ol class="lista-s" style="--linhas:{{ ((acoes|length) / 2)|round(0, 'ceil')|int }};margin-top:36px">
+      {% for a in acoes %}<li><span class="num">{{ '%02d'|format(loop.index) }}</span><b>{{ a.titulo }}</b></li>{% endfor %}
+    </ol>
+  </div>
+  {{ rodape(ns.n) }}
+</section>
+
+{% if tem_conteudo %}
+{% set ns.n = ns.n + 1 %}
+{% set itens = conteudo.linhas[:6] %}
+<section class="slide" aria-label="Conteúdo">
+  {{ folio(ns.n, total) }}
+  <div class="corpo">
+    <div class="sec">Conteúdo</div>
+    <h2 style="margin-top:22px">{% if escritos %}{{ escritos|length }} artigos já escritos, um para cada pergunta sem resposta.{% else %}Uma pauta para cada pergunta sem resposta.{% endif %}</h2>
+    <ol class="lista-s compacta" style="--linhas:{{ ((itens|length) / 2)|round(0, 'ceil')|int }};margin-top:26px">
+      {% for l in itens %}<li><span class="num">{{ '%02d'|format(l.numero) }}</span>
+        <b>{{ l.artigo.titulo if l.artigo else l.tema.titulo }}</b>
+        <span>“{{ l.tema.pergunta_alvo }}”</span></li>{% endfor %}
+    </ol>
+  </div>
+  {{ rodape(ns.n) }}
+</section>
+{% endif %}
+
+{% set ns.n = ns.n + 1 %}
+<section class="slide escuro fecho" aria-label="Próximo passo">
+  {{ folio(ns.n, total) }}
+  <div class="corpo">
+    <div class="sec">Próximo passo</div>
+    <h1 style="margin-top:32px">Medir, agir e <em>medir de novo</em>.</h1>
+    <div class="ciclo"><span>Radar</span>→<span>Conteúdo e plano</span>→<span class="ag">Novo radar</span></div>
+  </div>
+  {{ rodape(ns.n) }}
+</section>
+
+</div>
+
+<div class="progresso-s" id="progresso"></div>
+<div class="dica">← → para navegar · F tela cheia · Esc sai</div>
+<a class="sair" href="{{ url_for('radar', cid=c.id) }}">✕ sair</a>
+<script src="{{ url_for('static', filename='apresentar.js') }}" defer></script>
+</body>
+</html>

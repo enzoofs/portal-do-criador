@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui with context %}
+{% block titulo %}Mídia paga · {{ c.nome }}{% endblock %}
+{% block trilha %}{{ ui.trilha(c, 'Mídia paga') }}{% endblock %}
+{% block conteudo %}
+{% set meta %}{% if dados %}Termos de pesquisa do Google Ads · importado em <span class="mono">{{ dados.importado_em|data_br }}</span>
+  · {{ dados.arquivo }}{% else %}O que a agência já paga para aparecer no Google vira pergunta do radar e pauta de conteúdo.{% endif %}{% endset %}
+{% call ui.cabecalho('Mídia paga', meta) %}
+  <form method="post" enctype="multipart/form-data" class="acoes form-arquivo">
+    <input type="file" name="arquivo" accept=".csv,.tsv,.txt" aria-label="Arquivo CSV do Google Ads" required>
+    <button class="btn {{ 'primario' if not dados else '' }}">{{ 'Importar CSV' if not dados else 'Importar de novo' }}</button>
+  </form>
+{% endcall %}
+
+{% if dados %}
+<section class="faixa-kpi solta">
+  <div class="kpi"><div class="kpi-k">Investido</div><div class="kpi-v"><small>R$</small>{{ resumo.custo|round|int|milhar }}</div>
+    <div class="kpi-l">nos termos do relatório</div></div>
+  <div class="kpi"><div class="kpi-k">Cliques</div><div class="kpi-v">{{ resumo.cliques|milhar }}</div>
+    <div class="kpi-l">pagos no período</div></div>
+  <div class="kpi"><div class="kpi-k">Conversões</div><div class="kpi-v">{{ resumo.conversoes|num }}</div>
+    <div class="kpi-l">registradas no Google Ads</div></div>
+  <div class="kpi"><div class="kpi-k">Termos</div><div class="kpi-v">{{ resumo.termos|milhar }}</div>
+    <div class="kpi-l">diferentes buscados pelos clientes</div></div>
+</section>
+
+<form method="post" action="{{ url_for('midia_para_radar', cid=c.id) }}" class="pane mt">
+  <header class="pane-cab"><h2>Termos mais caros</h2>
+    <span>marque os que viram perguntas do radar · a pauta já usa os 15 primeiros</span>
+    <button class="btn peq primario">Adicionar ao radar</button></header>
+  <table class="tab tab-midia">
+    <thead><tr><th class="sel-col"></th><th>Termo e como vira pergunta para a IA</th><th class="num">Cliques</th>
+      <th class="num">Custo</th><th class="num">CPC</th><th class="num">Conv.</th><th>Radar</th></tr></thead>
+    <tbody>
+    {% for t in linhas %}
+    <tr>
+      <td class="sel-col">{% if not t.no_radar %}<input type="checkbox" name="pergunta" value="{{ t.pergunta }}"
+        aria-label="Adicionar {{ t.termo }}" {{ 'checked' if loop.index <= 5 }}>{% endif %}</td>
+      <td><span class="t">{{ t.termo }}</span><span class="sub">“{{ t.pergunta }}”</span></td>
+      <td class="num mono">{{ t.cliques|int|milhar }}</td>
+      <td class="num mono">R$ {{ '%.2f'|format(t.custo)|replace('.', ',') }}</td>
+      <td class="num mono">{{ '%.2f'|format(t.cpc)|replace('.', ',') }}</td>
+      <td class="num mono">{{ t.conversoes|num }}</td>
+      <td>{% if t.no_radar %}<span class="etq ok">no radar</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <footer class="pane-pe">A pergunta sugerida pode ser ajustada depois em Configurar. Os termos mais caros também
+  orientam a próxima pauta: um artigo que responde a esse termo tira dinheiro da conta de mídia.</footer>
+</form>
+{% else %}
+<div class="vazio-estado">
+  <h2>Importe os termos de pesquisa do Google Ads.</h2>
+  <p>No Google Ads: <b>Insights e relatórios → Termos de pesquisa</b>, escolha o período (ex.: últimos 90 dias),
+  clique em <b>Baixar</b> e escolha <b>CSV</b>. Vale o arquivo em português ou inglês.</p>
+  <p>Os termos que o cliente já paga para aparecer viram perguntas do radar (é o que ele pergunta às IAs também)
+  e orientam a pauta: o que hoje custa clique passa a ter uma página que responde de graça.</p>
+</div>
+{% endif %}
+{% endblock %}

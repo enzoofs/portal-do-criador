@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui with context %}
+{% import "_pendencias.html" as pend %}
+{% block titulo %}Pendências · {{ c.nome }}{% endblock %}
+{% block trilha %}<a href="{{ url_for('inicio') }}">Carteira</a><span>/</span><a href="{{ url_for('radar', cid=c.id) }}">{{ c.nome }}</a><span>/</span>
+<a href="{{ url_for('conteudo', cid=c.id) }}">Conteúdo</a><span>/</span><b>Pendências</b>{% endblock %}
+{% block conteudo %}
+{% set meta %}{% if total %}<span class="pend">{{ total }} pendência{{ 's' if total != 1 }}</span> em {{ grupos|length }} artigo{{ 's' if grupos|length != 1 }}.
+  Responda o que souber; o resto fica para depois.{% else %}Nenhuma pendência nos artigos.{% endif %}{% endset %}
+{% call ui.cabecalho('Respostas do especialista', meta) %}
+  <a class="btn leve" href="{{ url_for('conteudo', cid=c.id) }}">← Conteúdo</a>
+  {% if total %}<button class="btn primario" form="f-pend">Salvar respostas</button>{% endif %}
+{% endcall %}
+
+{% if grupos %}
+<form id="f-pend" method="post" class="pend-pagina">
+  {% for g in grupos %}
+  <section class="pane pend-grupo">
+    <header class="pend-grupo-cab">
+      <span class="mono">{{ '%02d'|format(g.numero) if g.numero else '—' }}</span>
+      <h2>{{ g.artigo.titulo }}</h2>
+      <a href="{{ url_for('artigo', cid=c.id, slug=g.artigo.slug) }}">abrir o artigo</a>
+    </header>
+    <div class="pane-corpo">{{ pend.campos(g.itens, slug=g.artigo.slug) }}</div>
+  </section>
+  {% endfor %}
+  <div class="pend-fim"><button class="btn primario">Salvar respostas</button></div>
+</form>
+{% else %}
+<p class="nota">Quando o redator marcar algo para confirmar, aparece aqui.</p>
+{% endif %}
+{% endblock %}

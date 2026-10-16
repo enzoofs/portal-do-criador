@@ -1,0 +1,22 @@
+# Provedores de IA consultados pelo radar e usados na redação (cada um é opcional: só roda com chave no .env)
+openai>=3.0.0
+anthropic>=1.13.0
+google-genai>=1.0.0
+pydantic>=2.0
+
+# Variáveis de ambiente do .env
+python-dotenv>=1.0.0
+
+# Conteúdo: Markdown -> HTML; HTTP para DataForSEO, WordPress, Webflow, Shopify, Wix e IndexNow
+markdown>=3.5
+requests>=2.31.0
+
+# GA4 e Search Console (conta de serviço; só leitura)
+google-auth>=2.20
+
+# App web local (python main.py servir); o Jinja do Flask também gera os sites dos clientes
+flask>=3.0
+waitress>=3.0
+
+# Sites dos clientes: reduz fotos grandes antes de publicar
+pillow>=10

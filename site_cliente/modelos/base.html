@@ -1,0 +1,96 @@
+{#- Base de todas as páginas do site do cliente. `raiz` é o caminho relativo até a raiz do site
+    ("", "../" ou "../../"), para o site funcionar tanto no domínio quanto na prévia do Portal. -#}
+{%- from "_blocos.html" import preencher with context -%}
+{%- set e = s.empresa -%}
+<!doctype html>
+<html lang="{{ s.idioma }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{ pagina.titulo }}</title>
+<meta name="description" content="{{ pagina.descricao }}">
+<link rel="canonical" href="{{ pagina.url }}">
+{% if previa %}<meta name="robots" content="noindex">{% endif %}
+<meta property="og:type" content="{{ pagina.og_tipo or 'website' }}">
+<meta property="og:site_name" content="{{ e.nome }}">
+<meta property="og:title" content="{{ pagina.titulo }}">
+<meta property="og:description" content="{{ pagina.descricao }}">
+<meta property="og:url" content="{{ pagina.url }}">
+<meta property="og:image" content="{{ s.dominio }}/assets/{{ s.marca.imagem_compartilhamento }}">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="{{ raiz }}assets/{{ s.marca.icone }}">
+<link rel="stylesheet" href="{{ raiz }}assets/fontes.css">
+<style>:root{
+  --fundo:{{ cores.fundo }};--fundo-2:{{ cores.fundo_2 }};--fundo-3:{{ cores.fundo_3 }};--fundo-rodape:{{ cores.fundo_rodape }};
+  --texto:{{ cores.texto }};--suave:{{ cores.suave }};--destaque:{{ cores.destaque }};--destaque-hover:{{ cores.destaque_hover }};
+  --texto-destaque:{{ cores.texto_no_destaque }};--secundaria:{{ cores.secundaria }};
+  --fundo-rgb:{{ cores.fundo_rgb }};--texto-rgb:{{ cores.texto_rgb }};--destaque-rgb:{{ cores.destaque_rgb }};--secundaria-rgb:{{ cores.secundaria_rgb }};
+  --titulo:'{{ s.marca.fontes.titulo }}',system-ui,sans-serif;--corpo:'{{ s.marca.fontes.corpo }}',system-ui,-apple-system,'Segoe UI',sans-serif;
+}</style>
+<link rel="stylesheet" href="{{ raiz }}assets/estilo.css">
+{% for bloco in pagina.jsonld %}<script type="application/ld+json">{{ bloco|tojson }}</script>
+{% endfor %}</head>
+<body>
+{% if previa %}<div class="previa"><b>Prévia da TimeLabs.</b> Itens com borda tracejada dependem de dados da {{ e.nome }} e não aparecem no site publicado.</div>{% endif %}
+
+<header class="topo">
+  <div class="cx">
+    <a href="{{ raiz or './' }}" aria-label="{{ e.nome }}, início"><img src="{{ raiz }}assets/{{ s.marca.logo }}" alt="{{ e.nome }}" width="{{ s.marca.logo_largura }}" height="56" style="height:56px;width:auto"></a>
+    <nav aria-label="Seções">
+      {% for p in menu %}<a href="{{ p.href }}"{% if p.atual %} aria-current="page"{% endif %}>{{ p.rotulo }}</a>{% endfor %}
+    </nav>
+    <a class="btn btn-amarelo" href="{{ link_whatsapp }}">Falar no WhatsApp</a>
+  </div>
+</header>
+
+<main>
+{% block conteudo %}{% endblock %}
+</main>
+
+<footer>
+  <div class="cx">
+    <div class="rod">
+      <div>
+        <img src="{{ raiz }}assets/{{ s.marca.logo }}" alt="{{ e.nome }}" width="{{ s.marca.logo_largura }}" height="46" style="height:46px;width:auto">
+        <p>{{ e.descricao }}</p>
+      </div>
+      <div>
+        <h3>Contato</h3>
+        <ul>
+          <li>WhatsApp: {{ e.whatsapp_exibir }}</li>
+          {% if e.email or previa %}<li>E-mail: {{ preencher(e.email, 'e-mail de contato') }}</li>{% endif %}
+          <li>{{ e.cidade }}, {{ e.uf }}{% if e.atende %} · atende {{ e.atende|replace(e.cidade ~ ' e ', '') }}{% endif %}</li>
+          {% if e.endereco or previa %}<li>{{ preencher(e.endereco, 'endereço completo') }}</li>{% endif %}
+        </ul>
+      </div>
+      {% set perfis = e.perfis.items()|selectattr(1)|list %}
+      {% if perfis or previa %}
+      <div>
+        <h3>Redes</h3>
+        <ul>
+          {% for rede, rotulo in [('instagram', 'Instagram'), ('linkedin', 'LinkedIn'), ('google', 'Perfil no Google')] %}
+          {% if e.perfis[rede] %}<li><a href="{{ e.perfis[rede] }}" rel="me noopener">{{ rotulo }}</a></li>{% elif previa %}<li>{{ preencher('', rotulo) }}</li>{% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      <div>
+        <h3>Empresa</h3>
+        <ul>
+          {% for p in menu %}<li><a href="{{ p.href }}">{{ p.rotulo }}</a></li>{% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div class="copy">
+      <span>© {{ ano }} {{ e.razao_social or e.nome }}{% if e.cnpj or previa %} · CNPJ {{ preencher(e.cnpj, '00.000.000/0000-00') }}{% endif %}</span>
+      <span>{{ e.cidade }} · {{ e.uf }} · Brasil</span>
+    </div>
+  </div>
+</footer>
+
+<a class="whats" href="{{ link_whatsapp }}" aria-label="Falar no WhatsApp">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91A9.86 9.86 0 0 0 12.04 2Zm5.8 14.03c-.24.68-1.41 1.3-1.95 1.35-.5.05-.97.23-3.26-.68-2.76-1.09-4.5-3.91-4.64-4.09-.13-.18-1.1-1.47-1.1-2.81 0-1.33.7-1.99.95-2.26.24-.27.53-.34.71-.34h.51c.16 0 .38-.06.6.46.23.54.77 1.87.84 2 .07.14.11.3.02.48-.09.18-.14.29-.27.45-.14.16-.29.35-.41.47-.14.14-.28.28-.12.55.16.27.7 1.16 1.51 1.88 1.04.93 1.91 1.21 2.18 1.35.27.14.43.11.59-.07.16-.18.68-.79.86-1.07.18-.27.36-.23.61-.14.25.09 1.58.75 1.85.88.27.14.45.2.52.32.07.11.07.66-.17 1.33Z"/></svg>
+</a>
+</body>
+</html>

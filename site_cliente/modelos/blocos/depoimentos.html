@@ -1,0 +1,15 @@
+<section class="bloco" id="{{ bloco.id or 'clientes' }}">
+  <div class="cx">
+    {% include "blocos/_cab.html" %}
+    <ul class="depo-cards">
+      {% for d in bloco.itens[:(bloco.maximo or 6)] %}
+      <li class="depo">
+        <blockquote>{{ d.texto }}</blockquote>
+        <div class="quem"><b>{{ d.nome }}</b>{% if d.empresa %}<span>{{ d.empresa }}</span>{% endif %}</div>
+        {% if d.video %}<details><summary>Ver depoimento em vídeo</summary>
+          <video src="{{ d.video }}#t=0.5" preload="none" controls playsinline aria-label="Depoimento de {{ d.nome }}"></video></details>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>

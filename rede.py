@@ -1,0 +1,54 @@
+"""
+rede.py — Baixar páginas da internet sem abrir porta para a rede interna (SSRF).
+
+O Portal baixa sites informados por quem usa (cadastro de cliente) e sites de clientes
+(auditoria do radar). Sem esta checagem, um endereço como http://127.0.0.1:5050/ ou
+http://169.254.169.254/ (metadados de nuvem) faria o Portal ler a própria máquina ou a
+rede interna. Regra: só http(s), e cada endereço, inclusive depois de redirecionamento,
+precisa resolver para IP público.
+"""
+
+import ipaddress
+import socket
+from urllib.parse import urljoin, urlparse
+
+import requests
+
+MAX_REDIRECIONAMENTOS = 4
+
+
+class EnderecoBloqueado(ValueError):
+    pass
+
+
+def conferir_url(url: str) -> str:
+    """Devolve a URL se ela aponta para a internet pública; senão levanta EnderecoBloqueado."""
+    partes = urlparse(url)
+    if partes.scheme not in ("http", "https") or not partes.hostname:
+        raise EnderecoBloqueado(f"Endereço inválido: {url}")
+    try:
+        infos = socket.getaddrinfo(partes.hostname, partes.port or (443 if partes.scheme == "https" else 80),
+                                   proto=socket.IPPROTO_TCP)
+    except socket.gaierror as e:
+        raise EnderecoBloqueado(f"Domínio não encontrado: {partes.hostname}") from e
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if not ip.is_global:
+            raise EnderecoBloqueado(f"{partes.hostname} aponta para um endereço interno ({ip}).")
+    return url
+
+
+def baixar(url: str, cabecalhos: dict | None = None, timeout: int = 15) -> requests.Response | None:
+    """GET seguindo redirecionamentos um a um, conferindo cada destino. None se falhar."""
+    atual = url
+    for _ in range(MAX_REDIRECIONAMENTOS + 1):
+        try:
+            conferir_url(atual)
+            resp = requests.get(atual, headers=cabecalhos or {}, timeout=timeout, allow_redirects=False)
+        except (EnderecoBloqueado, requests.RequestException):
+            return None
+        if resp.is_redirect or resp.is_permanent_redirect:
+            atual = urljoin(atual, resp.headers.get("Location", ""))
+            continue
+        return resp
+    return None

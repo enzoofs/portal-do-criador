@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<section class="blog-topo post-cab">
+  <div class="cx">
+    <p class="trilha"><a href="../../">Início</a> / <a href="../">Blog</a></p>
+    <h1>{{ a.titulo }}</h1>
+    <div class="post-meta"><span>{{ a.autor or s.empresa.nome }}</span><span>{{ a.data }}</span><span>{{ a.minutos }} min de leitura</span></div>
+  </div>
+</section>
+<article class="post">
+  <div class="cx">
+    <div class="prosa">{{ a.html|safe }}</div>
+    <aside class="lateral">
+      <div class="caixa-lat"><h3>Quer ajuda com isso?</h3><p>Conte sobre o seu negócio. Se fizer sentido, marcamos a consultoria inicial.</p>
+        <a class="btn btn-amarelo" href="{{ a.whatsapp }}">Falar no WhatsApp</a></div>
+      {% if outros %}<div class="caixa-lat"><h3>Leia também</h3><ul>
+        {% for o in outros %}<li><a href="../{{ o.slug }}/">{{ o.titulo }}</a></li>{% endfor %}</ul></div>{% endif %}
+      {% if servico_principal %}<div class="caixa-lat"><h3>{{ servico_principal.titulo }}</h3><p>{{ servico_principal.resumo|truncate(140, True, '…') }}</p>
+        <a href="../../{{ servico_principal.slug }}/">Saiba mais →</a></div>{% endif %}
+    </aside>
+  </div>
+</article>
+{% endblock %}

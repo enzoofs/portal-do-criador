@@ -1,0 +1,20 @@
+{% set e = s.empresa %}
+<section class="bloco" id="{{ bloco.id or 'dados-da-empresa' }}">
+  <div class="cx">
+    {% include "blocos/_cab.html" %}
+    <dl class="ficha">
+      <dt>Nome</dt><dd>{{ e.nome }}</dd>
+      {% if e.razao_social or previa %}<dt>Razão social</dt><dd>{{ preencher(e.razao_social, 'razão social') }}</dd>{% endif %}
+      {% if e.cnpj or previa %}<dt>CNPJ</dt><dd>{{ preencher(e.cnpj, '00.000.000/0000-00') }}</dd>{% endif %}
+      <dt>Cidade</dt><dd>{{ e.cidade }}, {{ e.uf }}{% if e.atende %} · atende {{ e.atende }}{% endif %}</dd>
+      {% if e.endereco or previa %}<dt>Endereço</dt><dd>{{ preencher(e.endereco, 'endereço completo') }}</dd>{% endif %}
+      {% if e.desde %}<dt>Desde</dt><dd>{{ e.desde }}</dd>{% endif %}
+      <dt>WhatsApp</dt><dd>{{ e.whatsapp_exibir }}</dd>
+      {% if e.email or previa %}<dt>E-mail</dt><dd>{{ preencher(e.email, 'e-mail de contato') }}</dd>{% endif %}
+      {% for rede, rotulo in [('instagram', 'Instagram'), ('linkedin', 'LinkedIn'), ('google', 'Perfil no Google')] %}
+      {% if e.perfis[rede] %}<dt>{{ rotulo }}</dt><dd><a href="{{ e.perfis[rede] }}" rel="me noopener">{{ e.perfis[rede] }}</a></dd>
+      {% elif previa %}<dt>{{ rotulo }}</dt><dd>{{ preencher('', 'link oficial') }}</dd>{% endif %}
+      {% endfor %}
+    </dl>
+  </div>
+</section>

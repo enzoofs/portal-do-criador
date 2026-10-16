@@ -1,0 +1,91 @@
+{% import "_ui.html" as ui with context %}<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block titulo %}Portal do Criador{% endblock %}</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 24'%3E%3Cpath d='M7 1.5h12l6 10.5-6 10.5H7L1 12z' fill='%23f5f5f5' stroke='%232d3142' stroke-width='1.6'/%3E%3Ccircle cx='13' cy='12' r='4' fill='%23bf4520'/%3E%3C/svg%3E">
+<style>
+@font-face{font-family:'Geist';font-weight:400;font-display:swap;src:url(/fontes/geist-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Geist';font-weight:500;font-display:swap;src:url(/fontes/geist-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Geist';font-weight:600;font-display:swap;src:url(/fontes/geist-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Geist Mono';font-weight:400;font-display:swap;src:url(/fontes/geist-mono-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Geist Mono';font-weight:500;font-display:swap;src:url(/fontes/geist-mono-latin-500-normal.woff2) format('woff2')}
+{{ css_base }}
+{% block css %}{% endblock %}
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body data-tarefa-ativa="{{ tarefa_ativa.id if tarefa_ativa else '' }}" data-cliente="{{ c.id if c else '' }}">
+<div class="shell">
+
+<aside class="lat" aria-label="Navegação">
+  <a class="logo" href="{{ url_for('inicio') }}">{{ ui.hexagono() }}<span>Portal do Criador</span></a>
+
+  <div class="lat-bloco lat-carteira">
+    <div class="lat-rot"><span>Carteira</span><span>{{ lateral.clientes|length }}</span></div>
+    {% for k in lateral.clientes %}
+    <a class="lat-cli{{ ' ativo' if c and c.id == k.c.id }}" href="{{ url_for('radar', cid=k.c.id) }}">
+      <span>{{ k.c.nome }}</span>
+      {% if k.resumo %}<span class="lat-num{{ ' baixo' if k.resumo.visibilidade < 30 }}"
+        title="Visibilidade nas IAs no último radar">{{ k.resumo.visibilidade|num }}%</span>{% endif %}
+    </a>
+    {% endfor %}
+    <a class="lat-cli novo" href="{{ url_for('novo_cliente') }}">+ Novo cliente</a>
+  </div>
+
+  {% if c %}{% set k = lateral.por_id.get(c.id) %}
+  <nav class="lat-bloco lat-secoes" aria-label="{{ c.nome }}">
+    <div class="lat-rot"><span>{{ c.nome }}</span></div>
+    <a class="lat-sec{{ ' ativa' if aba == 'radar' }}" href="{{ url_for('radar', cid=c.id) }}"><i>01</i>Radar
+      <b>{{ (k.resumo.visibilidade|num ~ '%') if k and k.resumo else '—' }}</b></a>
+    <a class="lat-sec{{ ' ativa' if aba == 'conteudo' }}" href="{{ url_for('conteudo', cid=c.id) }}"><i>02</i>Conteúdo
+      <b>{{ (k.escritos ~ '/' ~ k.temas) if k and k.temas else '—' }}</b></a>
+    <a class="lat-sec{{ ' ativa' if aba == 'plano' }}" href="{{ url_for('plano', cid=c.id) }}"><i>03</i>Plano de ações
+      <b data-lat-plano>{{ (k.acoes_feitas ~ '/' ~ k.acoes) if k and k.acoes else '—' }}</b></a>
+    <a class="lat-sec{{ ' ativa' if aba == 'site' }}" href="{{ url_for('site_editor', cid=c.id) }}"><i>04</i>Site</a>
+    <a class="lat-sec{{ ' ativa' if aba == 'resultados' }}" href="{{ url_for('resultados', cid=c.id) }}"><i>05</i>Resultados</a>
+    <a class="lat-sec{{ ' ativa' if aba == 'midia' }}" href="{{ url_for('midia', cid=c.id) }}"><i>06</i>Mídia paga</a>
+    <a class="lat-sec{{ ' ativa' if aba == 'config' }}" href="{{ url_for('config', cid=c.id) }}"><i>07</i>Configurar</a>
+  </nav>
+  {% endif %}
+
+  <div class="lat-pe">TimeLabs</div>
+</aside>
+
+<div class="area">
+  <header class="topo">
+    <nav class="trilha" aria-label="Você está em">{% block trilha %}<b>Carteira</b>{% endblock %}</nav>
+    <button class="btn-paleta" type="button" data-paleta>Ir para…<kbd>Ctrl K</kbd></button>
+  </header>
+  <main class="trabalho">{% block conteudo %}{% endblock %}</main>
+</div>
+</div>
+
+<dialog id="custo" class="dlg" aria-labelledby="custo-titulo">
+  <div class="dlg-cab"><span>Antes de rodar</span><button class="x" data-fechar aria-label="Fechar">✕</button></div>
+  <div class="dlg-corpo">
+    <h2 id="custo-titulo" data-titulo></h2>
+    <p>Esta execução chama IAs pagas. Confira a estimativa; ela para sozinha se atingir o teto.</p>
+    <table class="custo-linhas"><tbody></tbody></table>
+    <p data-sem-chave hidden>Nenhuma chave de IA configurada no <code>.env</code>. Use o modo demonstração.</p>
+    <label class="teto" data-rodadas hidden>Rodadas por pergunta
+      <select name="rodadas"><option value="1">1 (mais barato)</option><option value="3">3 (mais estável)</option>
+        <option value="5">5</option></select></label>
+    <label class="teto">Teto desta execução: US$ <input type="number" name="limite" min="0.05" step="0.05"></label>
+  </div>
+  <div class="dlg-pe acoes"><button class="btn leve" data-demo-rodar hidden>Demonstração grátis</button>
+    <span class="espaco"></span><button class="btn leve" data-fechar>Cancelar</button>
+    <button class="btn acento" data-confirmar>Confirmar e rodar</button></div>
+</dialog>
+
+<dialog id="paleta" class="paleta" aria-label="Ir para">
+  <input type="text" placeholder="Ir para um cliente, artigo ou guia…" autocomplete="off" spellcheck="false" aria-label="Buscar">
+  <ul role="listbox"></ul>
+  <div class="paleta-pe"><span><kbd>↑</kbd><kbd>↓</kbd> escolher</span><span><kbd>Enter</kbd> abrir</span><span><kbd>Esc</kbd> fechar</span></div>
+</dialog>
+
+{% if aviso %}<div class="toast" role="status">{{ aviso }}</div>{% endif %}
+<script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>

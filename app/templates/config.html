@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui with context %}
+{% block titulo %}Configurar · {{ c.nome }}{% endblock %}
+{% block trilha %}{{ ui.trilha(c, 'Configurar') }}{% endblock %}
+{% block conteudo %}
+{% set aviso = 'Cliente criado. Revise as perguntas do radar e o perfil: eles guiam tudo o que vem depois.' if novo else ('Configuração salva.' if salvo else '') %}
+{% if aviso %}<div class="toast" role="status">{{ aviso }}</div>{% endif %}
+{% set meta %}{{ c.site }} · {{ c.segmento }} · {{ c.cidade }}{% endset %}
+{% call ui.cabecalho('Configurar', meta) %}
+  <button class="btn primario" form="f-config">Salvar <kbd>Ctrl S</kbd></button>
+{% endcall %}
+
+{% set descoberta = c.perguntas|selectattr('tipo', 'equalto', 'descoberta')|map(attribute='texto')|list %}
+{% set marca = c.perguntas|selectattr('tipo', 'equalto', 'marca')|map(attribute='texto')|list %}
+{% set pub = c.publicacao or {} %}
+<form id="f-config" method="post" class="form-secoes">
+  <section class="pane form-sec">
+    <div class="form-exp">
+      <h2>Perguntas do radar</h2>
+      <p>Uma por linha. Escreva como um cliente escreveria, sem citar a marca nas perguntas de compra.</p>
+      <p class="mono">{{ descoberta|length }} de compra · {{ marca|length }} sobre a marca</p>
+    </div>
+    <div class="form-campos">
+      <div class="campo"><label for="f-desc">Perguntas de compra (o cliente procura um fornecedor)</label>
+        <textarea id="f-desc" name="descoberta" rows="10">{{ descoberta|join('\n') }}</textarea></div>
+      <div class="campo"><label for="f-marca">Perguntas sobre a marca</label>
+        <textarea id="f-marca" name="marca" rows="3">{{ marca|join('\n') }}</textarea></div>
+      <div class="campo"><label for="f-apel">Como o nome pode aparecer escrito (um por linha)</label>
+        <textarea id="f-apel" name="apelidos" rows="3">{{ c.apelidos|join('\n') }}</textarea></div>
+    </div>
+  </section>
+
+  <section class="pane form-sec">
+    <div class="form-exp">
+      <h2>Perfil da empresa</h2>
+      <p>A única fonte de fatos para os artigos. O redator nunca inventa: o que não estiver aqui vira pendência no texto.</p>
+    </div>
+    <div class="form-campos">
+      <div class="campo"><label for="f-serv">Serviços</label><textarea id="f-serv" name="servicos" rows="3">{{ c.perfil.servicos|join('\n') }}</textarea></div>
+      <div class="campo"><label for="f-proc">Processo / como trabalha</label><textarea id="f-proc" name="processo" rows="4">{{ c.perfil.processo|join('\n') }}</textarea></div>
+      <div class="campo"><label for="f-nich">Nichos atendidos</label><textarea id="f-nich" name="nichos" rows="4">{{ c.perfil.nichos|join('\n') }}</textarea></div>
+      <div class="campo"><label for="f-dif">Diferenciais</label><textarea id="f-dif" name="diferenciais" rows="3">{{ c.perfil.diferenciais|join('\n') }}</textarea></div>
+      <div class="campo"><label for="f-afi">Afirmações a confirmar (números, prêmios, anos)</label>
+        <textarea id="f-afi" name="afirmacoes_a_confirmar" rows="3">{{ c.perfil.afirmacoes_a_confirmar|join('\n') }}</textarea></div>
+      <div class="campo"><label for="f-tom">Tom de voz</label><input id="f-tom" type="text" name="tom" value="{{ c.perfil.tom }}"></div>
+    </div>
+  </section>
+
+  <section class="pane form-sec">
+    <div class="form-exp">
+      <h2>Conteúdo</h2>
+      <p>Quem assina os artigos (o Google e as IAs dão mais peso a conteúdo com autor real) e quanto do fluxo
+      precisa de aprovação. Artigo com pendência nunca é aprovado sozinho.</p>
+    </div>
+    <div class="form-campos">
+      <div class="campo duas">
+        <div><label for="a-nome">Autor dos artigos</label><input id="a-nome" type="text" name="autor_nome" value="{{ (c.perfil.autor or {}).nome or '' }}" placeholder="Ex.: Maria Souza"></div>
+        <div><label for="a-cargo">Cargo</label><input id="a-cargo" type="text" name="autor_cargo" value="{{ (c.perfil.autor or {}).cargo or '' }}" placeholder="Ex.: Fundador e CEO"></div>
+      </div>
+      <div class="campo"><label for="a-bio">Uma frase sobre o autor (só o que for confirmado)</label>
+        <input id="a-bio" type="text" name="autor_bio" value="{{ (c.perfil.autor or {}).bio or '' }}"></div>
+      <div class="campo"><label for="a-aprov">Aprovação</label>
+        <select id="a-aprov" name="aprovacao" class="sel">
+          {% for k, n in [('completa', 'Completa: aprovar cada artigo'), ('pauta', 'Só a pauta: artigo sem pendência já sai aprovado')] %}
+          <option value="{{ k }}" {{ 'selected' if (c.aprovacao or 'completa') == k }}>{{ n }}</option>{% endfor %}
+        </select></div>
+    </div>
+  </section>
+
+  <section class="pane form-sec">
+    <div class="form-exp">
+      <h2>Publicação</h2>
+      <p>Para onde os artigos aprovados vão, sempre como rascunho. As chaves de acesso ficam no
+      <code>.env</code> (veja o <code>.env.example</code>); aqui só os identificadores do site.</p>
+    </div>
+    <div class="form-campos">
+      <div class="campo"><label for="p-plat">Plataforma do site</label>
+        <select id="p-plat" name="pub_plataforma" class="sel">
+          {% for k, n in [('wordpress','WordPress'),('webflow','Webflow'),('shopify','Shopify'),('wix','Wix')] %}
+          <option value="{{ k }}" {{ 'selected' if (pub.plataforma or 'wordpress') == k }}>{{ n }}</option>{% endfor %}
+        </select></div>
+      <div class="campo duas">
+        <div><label for="p-col">Webflow: ID da coleção do blog</label><input id="p-col" type="text" name="pub_colecao" value="{{ pub.colecao or '' }}"></div>
+        <div><label for="p-loja">Shopify: loja (antes de .myshopify.com)</label><input id="p-loja" type="text" name="pub_loja" value="{{ pub.loja or '' }}"></div>
+      </div>
+      <div class="campo duas">
+        <div><label for="p-blog">Shopify: ID do blog</label><input id="p-blog" type="text" name="pub_blog_id" value="{{ pub.blog_id or '' }}"></div>
+        <div><label for="p-site">Wix: ID do site</label><input id="p-site" type="text" name="pub_site_id" value="{{ pub.site_id or '' }}"></div>
+      </div>
+      <div class="campo"><label for="p-membro">Wix: ID do membro autor dos posts</label><input id="p-membro" type="text" name="pub_membro_id" value="{{ pub.membro_id or '' }}"></div>
+    </div>
+  </section>
+</form>
+{% endblock %}

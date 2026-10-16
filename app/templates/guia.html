@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui with context %}
+{% block titulo %}{{ meta.titulo }} · {{ c.nome }}{% endblock %}
+{% block css %}{{ css_doc }}{% endblock %}
+{% block trilha %}<a href="{{ url_for('inicio') }}">Carteira</a><span>/</span><a href="{{ url_for('radar', cid=c.id) }}">{{ c.nome }}</a><span>/</span>
+<a href="{{ url_for('plano', cid=c.id) }}">Plano de ações</a><span>/</span><b>Guia</b>{% endblock %}
+{% block conteudo %}
+{% call ui.cabecalho(meta.titulo, meta.resumo, compacto=True) %}
+  <a class="btn leve" href="{{ url_for('plano', cid=c.id) }}">← Plano</a>
+{% endcall %}
+
+<div class="guia-app">
+  <article class="pane guia-doc"><div class="pane-corpo"><div class="doc">{{ corpo }}</div></div></article>
+  <aside class="guia-lado">
+    {% if acao %}
+    <section class="pane">
+      <header class="pane-cab"><h2>Andamento</h2></header>
+      <div class="pane-corpo">
+        <p class="nota">{{ acao.titulo }}</p>
+        {{ ui.status_acao(c, acao) }}
+      </div>
+    </section>
+    {% endif %}
+    {% if anexos %}
+    <section class="pane">
+      <header class="pane-cab"><h2>Arquivos</h2></header>
+      <div class="pane-corpo anexos-lista">
+        {% for n in anexos %}<a href="{{ url_for('anexo', cid=c.id, nome=n) }}"><b>{{ n }}</b><span>{{ 'opcional · ' if n == 'llms.txt' }}baixar ↓</span></a>{% endfor %}
+      </div>
+    </section>
+    {% endif %}
+    <section class="pane">
+      <header class="pane-cab"><h2>Nesta página</h2></header>
+      <nav class="pane-corpo indice-doc" data-indice aria-label="Seções do guia"></nav>
+    </section>
+  </aside>
+</div>
+{% endblock %}

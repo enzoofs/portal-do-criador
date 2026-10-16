@@ -1,0 +1,17 @@
+Copyright (c) 2026 TimeLabs. Todos os direitos reservados.
+
+Este repositório está público temporariamente, para avaliação técnica. Ver o código
+não concede licença de uso. Sem autorização por escrito da TimeLabs, não é permitido
+usar, copiar, modificar, distribuir, sublicenciar ou vender este software ou partes
+dele, nem usá-lo para prestar serviço a terceiros.
+
+O SOFTWARE É FORNECIDO "COMO ESTÁ", SEM GARANTIA DE QUALQUER TIPO, EXPRESSA OU
+IMPLÍCITA. EM NENHUMA HIPÓTESE OS AUTORES OU TITULARES DOS DIREITOS RESPONDEM POR
+QUALQUER RECLAMAÇÃO, DANO OU OUTRA RESPONSABILIDADE DECORRENTE DO SOFTWARE OU DO
+SEU USO.
+
+Componentes de terceiros, com licença própria:
+- Fontes Geist e Geist Mono (assets/fonts/): SIL Open Font License 1.1, texto em
+  assets/fonts/OFL.txt.
+- As bibliotecas Python listadas em requirements.txt são instaladas à parte, cada
+  uma sob a sua licença, e não fazem parte deste repositório.

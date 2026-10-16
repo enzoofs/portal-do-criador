@@ -1,0 +1,27 @@
+{# Cada marcador [[...]] vira uma pergunta com campo. form= liga os campos a um <form> de fora. #}
+{% macro campos(itens, slug=None, form=None) -%}
+<ol class="pend-lista">
+{% for p in itens %}
+  {% set id = (slug or 'a') ~ '-' ~ loop.index %}
+  <li class="pend-item" data-pend>
+    {% if slug %}<input type="hidden" name="pend_slug" value="{{ slug }}"{% if form %} form="{{ form }}"{% endif %}>{% endif %}
+    <input type="hidden" name="pend_m" value="{{ p.marcador }}"{% if form %} form="{{ form }}"{% endif %}>
+    <input type="hidden" name="pend_orig" value="{{ p.sugestao }}"{% if form %} form="{{ form }}"{% endif %}>
+    <label class="pend-perg" for="pv-{{ id }}">
+      <span class="pend-tipo">{{ 'Confirmar' if p.tipo == 'confirmar' else 'Informar' }}</span>
+      {{ p.pedido }}
+    </label>
+    {% if p.contexto %}<p class="pend-ctx">“{{ p.contexto }}”</p>{% endif %}
+    <textarea id="pv-{{ id }}" name="pend_valor" rows="2" class="baixa"{% if form %} form="{{ form }}"{% endif %}
+      placeholder="{{ 'Corrija se precisar' if p.tipo == 'confirmar' else 'Escreva a resposta como deve aparecer no texto' }}">{{ p.sugestao }}</textarea>
+    <div class="pend-acoes">
+      <select name="pend_acao" aria-label="O que fazer com esta pendência"{% if form %} form="{{ form }}"{% endif %}>
+        <option value="depois" selected>Responder depois</option>
+        <option value="usar">{{ 'Está correto, usar este texto' if p.tipo == 'confirmar' else 'Usar esta resposta' }}</option>
+        <option value="tirar">Não temos esse dado, tirar do texto</option>
+      </select>
+    </div>
+  </li>
+{% endfor %}
+</ol>
+{%- endmacro %}

@@ -1,0 +1,307 @@
+{
+  "versao": 2,
+  "_fonte": "Rascunho criado do cadastro de Agência Exemplo. Revise tudo antes de publicar.",
+  "dominio": "https://agencia-exemplo.example",
+  "idioma": "pt-BR",
+  "marca": {
+    "logo": "logo.svg",
+    "icone": "icone.svg",
+    "imagem_compartilhamento": "compartilhar.png",
+    "fontes": {
+      "titulo": "Sora",
+      "corpo": "Manrope"
+    },
+    "cores": {
+      "fundo": "#101318",
+      "fundo_2": "#171b22",
+      "fundo_3": "#1f2530",
+      "texto": "#eef1f6",
+      "suave": "#a7afbf",
+      "destaque": "#3ddc97",
+      "destaque_hover": "#6ee7b3",
+      "texto_no_destaque": "#06140d",
+      "secundaria": "#5b8cff"
+    }
+  },
+  "empresa": {
+    "nome": "Agência Exemplo",
+    "razao_social": "",
+    "cnpj": "",
+    "descricao": "Agência de tráfego pago em Belo Horizonte.",
+    "desde": null,
+    "cidade": "Belo Horizonte",
+    "uf": "MG",
+    "endereco": "",
+    "email": "",
+    "whatsapp": "5500000000000",
+    "whatsapp_exibir": "+55 00 00000-0000",
+    "mensagem_whatsapp": "Olá! Vim pelo site e quero saber mais.",
+    "formulario": "",
+    "perfis": {
+      "instagram": "",
+      "linkedin": "",
+      "google": ""
+    },
+    "atende": "Belo Horizonte"
+  },
+  "fundador": {
+    "nome": "Maria Exemplo",
+    "cargo": "Fundadora",
+    "bio": [
+      "Bio fictícia da fundadora da Agência Exemplo, para demonstração."
+    ],
+    "destaques": []
+  },
+  "blog": {
+    "ativo": true,
+    "titulo": "Blog da Agência Exemplo",
+    "texto": "",
+    "rotulo_menu": "Blog"
+  },
+  "paginas": [
+    {
+      "slug": "",
+      "tipo": "inicio",
+      "titulo_pagina": "Agência Exemplo | agência de tráfego pago em Belo Horizonte",
+      "descricao": "Agência de tráfego pago em Belo Horizonte. Fale com a Agência Exemplo pelo WhatsApp.",
+      "menu": "",
+      "blocos": [
+        {
+          "tipo": "abertura",
+          "olho": "agência de tráfego pago em Belo Horizonte",
+          "titulo": "Agência de tráfego pago em Belo Horizonte",
+          "titulo_destaque": "",
+          "subtitulo": "Atendimento direto com quem opera as campanhas",
+          "botao": "Falar no WhatsApp",
+          "botao2_texto": "",
+          "botao2_pagina": "agencia-de-trafego-pago-belo-horizonte",
+          "imagem_fundo": ""
+        },
+        {
+          "tipo": "numeros",
+          "itens": [
+            {
+              "valor": "40+",
+              "rotulo": "clientes (número fictício)"
+            },
+            {
+              "valor": "Desde 2020",
+              "rotulo": "em Belo Horizonte (fictício)"
+            }
+          ]
+        },
+        {
+          "tipo": "para_quem",
+          "olho": "Para quem é",
+          "titulo": "Para quem a Agência Exemplo trabalha",
+          "texto": "",
+          "dores": [
+            "Relatório simples, sem jargão",
+            "Começa com verba de teste antes de escalar"
+          ],
+          "segmentos": [
+            "Clínicas",
+            "Comércio local",
+            "Lojas virtuais"
+          ],
+          "nota": ""
+        },
+        {
+          "tipo": "servicos",
+          "olho": "O que fazemos",
+          "titulo": "Serviços",
+          "itens": [
+            {
+              "nome": "Gestão de Google Ads",
+              "texto": ""
+            },
+            {
+              "nome": "Gestão de Meta Ads",
+              "texto": ""
+            },
+            {
+              "nome": "Relatórios mensais de resultado",
+              "texto": ""
+            }
+          ]
+        },
+        {
+          "tipo": "processo",
+          "olho": "Como trabalhamos",
+          "titulo": "Nosso processo",
+          "texto": "",
+          "estilo": "lista",
+          "etapas": [
+            {
+              "nome": "Diagnóstico",
+              "texto": "entende o negócio e a concorrência",
+              "imagem": ""
+            },
+            {
+              "nome": "Planejamento",
+              "texto": "define verba, canais e metas",
+              "imagem": ""
+            },
+            {
+              "nome": "Execução",
+              "texto": "cria e ajusta as campanhas toda semana",
+              "imagem": ""
+            },
+            {
+              "nome": "Relatório",
+              "texto": "mostra o que trouxe cliente e o que muda",
+              "imagem": ""
+            }
+          ]
+        },
+        {
+          "tipo": "depoimentos",
+          "olho": "Prova social",
+          "titulo": "O que os clientes dizem",
+          "texto": "Depoimentos fictícios, só para demonstração.",
+          "maximo": 3,
+          "itens": [
+            {
+              "texto": "Depoimento de exemplo: as campanhas passaram a trazer contatos todas as semanas.",
+              "nome": "Cliente Exemplo A",
+              "empresa": "Empresa A (fictícia)",
+              "video": ""
+            },
+            {
+              "texto": "Depoimento de exemplo: o relatório mensal ficou fácil de entender.",
+              "nome": "Cliente Exemplo B",
+              "empresa": "Empresa B (fictícia)",
+              "video": ""
+            }
+          ]
+        },
+        {
+          "tipo": "blog_recente",
+          "olho": "Blog",
+          "titulo": "Do nosso blog",
+          "texto": "",
+          "quantidade": 3
+        },
+        {
+          "tipo": "perguntas",
+          "olho": "Perguntas frequentes",
+          "titulo": "Perguntas frequentes",
+          "itens": [
+            {
+              "pergunta": "Onde fica a Agência Exemplo?",
+              "resposta": "Em Belo Horizonte, Minas Gerais."
+            },
+            {
+              "pergunta": "Quais serviços a Agência Exemplo oferece?",
+              "resposta": "Gestão de Google Ads; Gestão de Meta Ads; Relatórios mensais de resultado."
+            }
+          ]
+        },
+        {
+          "tipo": "chamada_final",
+          "olho": "Vamos conversar",
+          "titulo": "Fale com a Agência Exemplo",
+          "texto": "",
+          "imagem_fundo": ""
+        }
+      ]
+    },
+    {
+      "slug": "sobre",
+      "tipo": "sobre",
+      "titulo_pagina": "Sobre a Agência Exemplo",
+      "descricao": "Conheça a Agência Exemplo: quem somos, o que fazemos em Belo Horizonte e nossos dados oficiais.",
+      "menu": "Sobre",
+      "blocos": [
+        {
+          "tipo": "cabecalho_pagina",
+          "titulo": "Sobre a Agência Exemplo",
+          "resumo": "",
+          "mostrar_botao": false
+        },
+        {
+          "tipo": "sobre_fundador",
+          "olho": "Quem está por trás",
+          "titulo": "Maria Exemplo, Fundadora",
+          "foto": ""
+        },
+        {
+          "tipo": "servicos",
+          "olho": "O que fazemos",
+          "titulo": "Serviços",
+          "itens": [
+            {
+              "nome": "Gestão de Google Ads",
+              "texto": ""
+            },
+            {
+              "nome": "Gestão de Meta Ads",
+              "texto": ""
+            },
+            {
+              "nome": "Relatórios mensais de resultado",
+              "texto": ""
+            }
+          ]
+        },
+        {
+          "tipo": "ficha_empresa",
+          "olho": "Dados da empresa",
+          "titulo": "Quem somos, oficialmente"
+        },
+        {
+          "tipo": "chamada_final",
+          "olho": "Vamos conversar",
+          "titulo": "Fale com a Agência Exemplo",
+          "texto": "",
+          "imagem_fundo": ""
+        }
+      ]
+    },
+    {
+      "slug": "agencia-de-trafego-pago-belo-horizonte",
+      "tipo": "servico",
+      "titulo_pagina": "agência de tráfego pago em Belo Horizonte | Agência Exemplo",
+      "descricao": "Agência de tráfego pago em Belo Horizonte com a Agência Exemplo.",
+      "menu": "Agência de tráfego pago em Belo Horizonte",
+      "servico_nome": "agência de tráfego pago",
+      "blocos": [
+        {
+          "tipo": "cabecalho_pagina",
+          "titulo": "Agência de tráfego pago em Belo Horizonte",
+          "resumo": "",
+          "mostrar_botao": true
+        },
+        {
+          "tipo": "texto",
+          "olho": "",
+          "titulo": "",
+          "secoes": [
+            {
+              "titulo": "Como a Agência Exemplo trabalha",
+              "texto": "Atendimento direto com quem opera as campanhas Relatório simples, sem jargão Começa com verba de teste antes de escalar"
+            }
+          ]
+        },
+        {
+          "tipo": "perguntas",
+          "olho": "Perguntas frequentes",
+          "titulo": "Perguntas sobre agência de tráfego pago em Belo Horizonte",
+          "itens": [
+            {
+              "pergunta": "Onde fica a Agência Exemplo?",
+              "resposta": "Em Belo Horizonte, Minas Gerais."
+            }
+          ]
+        },
+        {
+          "tipo": "chamada_final",
+          "olho": "Vamos conversar",
+          "titulo": "Fale com a Agência Exemplo",
+          "texto": "",
+          "imagem_fundo": ""
+        }
+      ]
+    }
+  ]
+}

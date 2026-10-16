@@ -1,0 +1,5 @@
+{% if bloco.itens %}<section class="numeros" aria-label="Números">
+  <div class="cx"><ul>
+    {% for n in bloco.itens %}<li><b>{{ n.valor }}</b><span>{{ n.rotulo }}</span></li>{% endfor %}
+  </ul></div>
+</section>{% endif %}

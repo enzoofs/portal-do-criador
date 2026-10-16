@@ -1,0 +1,9 @@
+{% if artigos %}
+<section class="bloco" id="{{ bloco.id or 'blog' }}">
+  <div class="cx">
+    {% include "blocos/_cab.html" %}
+    {{ cartoes_blog(artigos[:(bloco.quantidade or 3)], raiz) }}
+    {% if artigos|length > (bloco.quantidade or 3) or pagina.tipo == 'inicio' %}<div class="ver-todos"><a class="btn btn-linha" href="{{ raiz }}blog/">Ver todos os artigos</a></div>{% endif %}
+  </div>
+</section>
+{% endif %}

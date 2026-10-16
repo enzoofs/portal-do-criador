@@ -1,0 +1,33 @@
+{
+  "id": "exemplo",
+  "nome": "Agência Exemplo",
+  "site": "https://agencia-exemplo.example/",
+  "apelidos": [
+    "Agência Exemplo"
+  ],
+  "dominios": [
+    "agencia-exemplo.example"
+  ],
+  "cidade": "Belo Horizonte",
+  "regiao": "Minas Gerais",
+  "pais": "BR",
+  "segmento": "agência de tráfego pago",
+  "perfil": {
+    "_fonte": "Cliente FICTÍCIO para testes e demonstração. Nenhum dado aqui é real; o domínio .example é reservado.",
+    "servicos": [],
+    "processo": [],
+    "nichos": [],
+    "diferenciais": [],
+    "afirmacoes_a_confirmar": [],
+    "clientes_citados_no_site": [],
+    "cta": {
+      "texto": "Fale com a Agência Exemplo pelo WhatsApp",
+      "whatsapp": "5500000000000"
+    },
+    "tom": "x",
+    "autor": null
+  },
+  "perguntas": [],
+  "aprovacao": "completa",
+  "publicacao": {}
+}

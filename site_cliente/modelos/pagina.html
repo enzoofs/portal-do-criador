@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block conteudo %}
+{% from "_blocos.html" import preencher, cartoes_blog with context %}
+{% for bloco in pagina.blocos %}{% set loop_bloco = loop.index %}
+{#- na prévia, cada bloco leva o índice: o editor rola e destaca o bloco em edição #}
+{% if previa %}<div data-bloco="{{ loop.index0 }}" style="display:contents">{% endif %}
+{% include "blocos/" ~ bloco.tipo ~ ".html" %}
+{% if previa %}</div>{% endif %}
+{% endfor %}
+{% endblock %}

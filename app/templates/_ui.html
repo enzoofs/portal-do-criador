@@ -1,0 +1,58 @@
+{# Peças comuns das telas do app #}
+
+{% macro cabecalho(titulo, meta='', compacto=False) -%}
+<header class="cab{{ ' compacto' if compacto }}">
+  <div class="cab-txt">
+    <h1>{{ titulo }}</h1>
+    {% if meta %}<p class="cab-meta">{{ meta }}</p>{% endif %}
+  </div>
+  {% if caller %}<div class="acoes">{{ caller() }}</div>{% endif %}
+</header>
+{%- endmacro %}
+
+{# Início de uma seção da página: linha escura, título e uma frase do que ela mostra #}
+{% macro secao_cab(titulo, texto='', meta='') -%}
+<header class="secao-cab">
+  <div><h2>{{ titulo }}</h2>{% if texto %}<p>{{ texto }}</p>{% endif %}</div>
+  {% if meta %}<span class="secao-meta">{{ meta }}</span>{% endif %}
+</header>
+{%- endmacro %}
+
+{% macro trilha(c, atual) -%}
+<a href="{{ url_for('inicio') }}">Carteira</a><span>/</span>
+{% if c %}<a href="{{ url_for('radar', cid=c.id) }}">{{ c.nome }}</a><span>/</span>{% endif %}
+<b>{{ atual }}</b>
+{%- endmacro %}
+
+{% macro status_acao(c, a) -%}
+<div class="status-acao" role="group" aria-label="Andamento" data-cliente="{{ c.id }}" data-titulo="{{ a.titulo }}">
+  {%- for s in STATUS_ACAO %}<button type="button" data-s="{{ s }}" class="{{ 'sel' if a.status == s }}"
+    aria-pressed="{{ 'true' if a.status == s else 'false' }}">{{ s }}</button>{% endfor -%}
+</div>
+{%- endmacro %}
+
+{% macro hexagono(cls='hex') -%}
+<svg class="{{ cls }}" viewBox="0 0 26 24" aria-hidden="true"><path d="M7 1.5h12l6 10.5-6 10.5H7L1 12z"
+  fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="13" cy="12" r="3.6" fill="var(--accent)"/></svg>
+{%- endmacro %}
+
+{# Aviso + como resolver de uma seção do radar (app/leituras.py) #}
+{% macro leitura(l, c) -%}
+{% if l %}
+<div class="leitura {{ l.tom }}">
+  <div class="lt-col">
+    <div class="lt-rot">{{ 'Aviso' if l.tom == 'alerta' else 'Leitura' }}</div>
+    <p class="lt-aviso">{{ l.aviso }}</p>
+    {% if l.termos %}<dl class="lt-termos">{% for t in l.termos %}<div><dt>{{ t.termo }}</dt><dd>{{ t.texto }}</dd></div>{% endfor %}</dl>{% endif %}
+  </div>
+  {% if l.passos %}
+  <div class="lt-col">
+    <div class="lt-rot">Como resolver</div>
+    <ol class="lt-passos">{% for p in l.passos %}<li>{{ p }}</li>{% endfor %}</ol>
+    {% if l.rodape %}<p class="lt-rodape">{{ l.rodape }}</p>{% endif %}
+    {% if l.guia %}<a class="lt-guia" href="{{ url_for('guia', cid=c.id, nome=l.guia) }}">Abrir o guia →</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{%- endmacro %}

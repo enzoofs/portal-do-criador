@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<section class="erro-404">
+  <div class="cx">
+    <p class="olho">Página não encontrada</p>
+    <h1>Essa página não existe mais</h1>
+    <p>O endereço pode ter mudado. Volte para o início, veja o blog ou fale com a gente pelo WhatsApp.</p>
+    <div class="acoes" style="margin-top:28px;display:flex;flex-wrap:wrap;gap:12px">
+      <a class="btn btn-amarelo" href="/">Ir para o início</a>
+      {% if tem_blog %}<a class="btn btn-linha" href="/blog/">Ver o blog</a>{% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

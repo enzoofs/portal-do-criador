@@ -1,0 +1,8 @@
+<section class="bloco" id="{{ bloco.id or 'para-quem' }}">
+  <div class="cx">
+    {% include "blocos/_cab.html" %}
+    {% if bloco.dores %}<div class="dores">{% for d in bloco.dores %}<div><i>{{ '%02d'|format(loop.index) }}</i><p>{{ d }}</p></div>{% endfor %}</div>{% endif %}
+    {% if bloco.segmentos %}<ul class="segmentos" aria-label="Segmentos atendidos">{% for g in bloco.segmentos %}<li>{{ g }}</li>{% endfor %}</ul>{% endif %}
+    {% if bloco.nota %}<p class="nota-seg">{{ bloco.nota }}</p>{% endif %}
+  </div>
+</section>

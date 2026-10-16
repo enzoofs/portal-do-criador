@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui with context %}
+{% block titulo %}Site · {{ c.nome }}{% endblock %}
+{% block trilha %}{{ ui.trilha(c, 'Site') }}{% endblock %}
+{% block conteudo %}
+{% if not existe %}
+{{ ui.cabecalho('Site', 'O site do cliente, com blog, pronto para o Google e as IAs.') }}
+<section class="pane vazio-estado se-vazio">
+  <h2>{{ c.nome }} ainda não tem site aqui</h2>
+  <p>O Portal monta um primeiro rascunho só com o que já está no cadastro: nome, cidade, serviço, nichos, processo e
+  WhatsApp. Nada é inventado. Depois você ajusta cada bloco, vê a prévia ao lado e confere a lista do que falta antes de publicar.</p>
+  <button class="btn primario" type="button" data-site-criar="{{ c.id }}">Criar site a partir do cadastro</button>
+  <p class="nota">Já tem um site bom em WordPress, Webflow, Shopify ou Wix? Talvez seja melhor ajustar o atual e publicar só o blog.
+  Veja as opções em docs/SITES.md.</p>
+</section>
+{% else %}
+<div class="se" data-site-editor>
+  <header class="se-topo">
+    <div class="se-titulo">
+      <h1>Site</h1>
+      <span class="se-estado" data-estado>tudo salvo</span>
+    </div>
+    <div class="se-acoes">
+      <button class="btn" type="button" data-salvar>Salvar e atualizar prévia <kbd>Ctrl S</kbd></button>
+      <button class="btn primario" type="button" data-publicar>Gerar versão para publicar</button>
+    </div>
+  </header>
+
+  <div class="se-corpo">
+    <aside class="se-painel" aria-label="Editor">
+      <div class="se-abas" role="tablist">
+        <button type="button" role="tab" aria-selected="true" data-se-aba="paginas">Páginas</button>
+        <button type="button" role="tab" aria-selected="false" data-se-aba="config">Configurações</button>
+        <button type="button" role="tab" aria-selected="false" data-se-aba="checagem">Antes de publicar <b data-cont-checagem></b></button>
+      </div>
+      <div class="se-erros" data-erros hidden></div>
+      <div class="se-conteudo" data-se-painel="paginas"></div>
+      <div class="se-conteudo" data-se-painel="config" hidden></div>
+      <div class="se-conteudo" data-se-painel="checagem" hidden></div>
+    </aside>
+
+    <section class="se-previa" aria-label="Prévia">
+      <div class="se-previa-barra">
+        <select class="sel" data-previa-pagina aria-label="Página na prévia"></select>
+        <div class="se-dispositivo" role="group" aria-label="Tamanho da prévia">
+          <button type="button" aria-pressed="true" data-dispositivo="computador">Computador</button>
+          <button type="button" aria-pressed="false" data-dispositivo="celular">Celular</button>
+        </div>
+        <a class="btn leve" data-previa-aba target="_blank" rel="noopener">Abrir em nova aba ↗</a>
+      </div>
+      <div class="se-moldura" data-moldura><iframe data-previa title="Prévia do site"></iframe></div>
+    </section>
+  </div>
+</div>
+<script id="se-dados" type="application/json">{{ dados|tojson }}</script>
+{% endif %}
+<script src="{{ url_for('static', filename='site-editor.js') }}" defer></script>
+{% endblock %}

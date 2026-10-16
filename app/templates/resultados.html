@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui with context %}
+{% block titulo %}Resultados · {{ c.nome }}{% endblock %}
+{% block trilha %}{{ ui.trilha(c, 'Resultados') }}{% endblock %}
+{% block conteudo %}
+{% set pronto = conf.credencial and (conf.ga4 or conf.search_console) %}
+{% set meta %}{% if r %}Período <span class="mono">{{ r.periodo[0] }}</span> a <span class="mono">{{ r.periodo[1] }}</span>
+  · atualizado em <span class="mono">{{ r.gerado_em|data_br }}</span>{% else %}Visitas vindas de IAs, cliques no WhatsApp e no Google, por artigo.{% endif %}{% endset %}
+{% call ui.cabecalho('Resultados', meta) %}
+  {% if pronto %}<form method="post"><button class="btn primario" name="acao" value="atualizar">Atualizar números</button></form>{% endif %}
+{% endcall %}
+
+{% if r %}
+<section class="faixa-kpi solta">
+  <div class="kpi hero"><div class="kpi-k">Visitas vindas de IAs</div>
+    <div class="kpi-v">{{ r.ia.total if r.ia else '—' }}</div>
+    <div class="kpi-l">{% if r.ia and r.ia.por_fonte %}{% for f, n in r.ia.por_fonte %}{{ f }} {{ n }}{{ ' · ' if not loop.last }}{% endfor %}{% else %}nos últimos 28 dias{% endif %}</div></div>
+  <div class="kpi"><div class="kpi-k">WhatsApp</div><div class="kpi-v">{{ r.whatsapp.total if r.whatsapp else '—' }}</div>
+    <div class="kpi-l">cliques no botão de WhatsApp do site</div></div>
+  <div class="kpi"><div class="kpi-k">Google</div><div class="kpi-v">{{ r.google.cliques|milhar if r.google else '—' }}</div>
+    <div class="kpi-l">cliques na busca{% if r.google %} · {{ r.google.impressoes|milhar }} impressões{% endif %}</div></div>
+</section>
+
+{% if r.erros %}<div class="aviso-erros">{% for k, e in r.erros.items() %}<p><b>{{ k }}:</b> {{ e }}</p>{% endfor %}</div>{% endif %}
+
+{% if r.artigos %}
+<section class="pane mt">
+  <header class="pane-cab"><h2>Por artigo</h2><span>o WhatsApp de cada artigo já abre dizendo de qual artigo o lead veio</span></header>
+  <table class="tab">
+    <thead><tr><th>Artigo</th><th class="num">Visitas de IAs</th><th class="num">WhatsApp</th>
+      <th class="num">Cliques no Google</th><th class="num">Impressões</th></tr></thead>
+    <tbody>{% for a in r.artigos %}
+      <tr><td><span class="t">{{ a.titulo }}</span><span class="sub mono">/{{ a.slug }}/</span></td>
+        <td class="num mono">{{ a.visitas_ia }}</td><td class="num mono">{{ a.whatsapp }}</td>
+        <td class="num mono">{{ a.cliques_google }}</td><td class="num mono">{{ a.impressoes|milhar }}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+</section>
+{% endif %}
+{% endif %}
+
+<section class="pane form-sec mt" id="projecao">
+  <div class="form-exp">
+    <h2>Projeção de 12 meses</h2>
+    <p>Uma simulação para conversar com o cliente, não uma promessa. Cada artigo só começa a trazer visitas depois
+    de alguns meses; em blogs novos é comum o crescimento aparecer só depois de 6 a 12 meses de publicação constante
+    do primeiro artigo). Ajuste as premissas com os números do cliente.</p>
+  </div>
+  <div class="form-campos proj" data-projecao>
+    <div class="campo duas">
+      <div><label for="pj-art">Artigos por mês</label><input id="pj-art" type="number" min="1" max="60" value="8"></div>
+      <div><label for="pj-mat">Meses até um artigo começar a render</label><input id="pj-mat" type="number" min="0" max="11" value="6"></div>
+    </div>
+    <div class="campo duas">
+      <div><label for="pj-vis">Visitas por artigo por mês, depois disso</label><input id="pj-vis" type="number" min="0" value="20"></div>
+      <div><label for="pj-conv">Visitas que viram contato (%)</label><input id="pj-conv" type="number" min="0" max="100" step="0.1" value="1"></div>
+    </div>
+    <div class="campo duas">
+      <div><label for="pj-fech">Contatos que viram cliente (%)</label><input id="pj-fech" type="number" min="0" max="100" value="20"></div>
+      <div><label for="pj-val">Quanto vale um cliente (R$)</label><input id="pj-val" type="number" min="0" step="100" placeholder="Ex.: 3000"></div>
+    </div>
+    <div class="tabela-proj">
+      <table class="tab">
+        <thead><tr><th>Em 12 meses</th><th class="num">Cauteloso</th><th class="num">Base</th><th class="num">Otimista</th></tr></thead>
+        <tbody>
+          <tr><td>Visitas</td><td class="num mono" data-r="visitas-0"></td><td class="num mono" data-r="visitas-1"></td><td class="num mono" data-r="visitas-2"></td></tr>
+          <tr><td>Contatos</td><td class="num mono" data-r="contatos-0"></td><td class="num mono" data-r="contatos-1"></td><td class="num mono" data-r="contatos-2"></td></tr>
+          <tr><td>Clientes</td><td class="num mono" data-r="clientes-0"></td><td class="num mono" data-r="clientes-1"></td><td class="num mono" data-r="clientes-2"></td></tr>
+          <tr><td>Valor gerado</td><td class="num mono" data-r="valor-0"></td><td class="num mono" data-r="valor-1"></td><td class="num mono" data-r="valor-2"></td></tr>
+        </tbody>
+      </table>
+      <p class="nota" data-r="leitura"></p>
+    </div>
+  </div>
+</section>
+
+<section class="pane form-sec mt">
+  <div class="form-exp">
+    <h2>Acesso</h2>
+    <p>O portal só lê. Peça ao cliente para adicionar o e-mail da conta de serviço da TimeLabs como
+    <b>Leitor</b> no GA4 (Administrador → Gerenciamento de acesso à propriedade) e como <b>Usuário</b>
+    no Search Console (Configurações → Usuários e permissões).</p>
+    <p class="mono">{{ 'conta de serviço configurada' if conf.credencial else 'falta GOOGLE_CREDENCIAIS no .env' }}</p>
+  </div>
+  <form method="post" class="form-campos">
+    <div class="campo"><label for="r-ga4">ID da propriedade do GA4 (só números)</label>
+      <input id="r-ga4" type="text" name="ga4" value="{{ (c.medicao or {}).ga4 or '' }}" placeholder="Ex.: 412345678"></div>
+    <div class="campo"><label for="r-gsc">Propriedade do Search Console</label>
+      <input id="r-gsc" type="text" name="search_console" value="{{ (c.medicao or {}).search_console or '' }}"
+        placeholder="sc-domain:{{ c.dominios[0] if c.dominios else 'site.com.br' }}"></div>
+    <div class="acoes"><button class="btn">Salvar acesso</button></div>
+  </form>
+</section>
+{% endblock %}
