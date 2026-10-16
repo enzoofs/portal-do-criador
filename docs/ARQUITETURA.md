@@ -59,6 +59,7 @@ plano_correcao.py → entregas/<id>/plano-de-correcao.html   publicador.py / pla
 | `app/seguranca.py` | Proteções do app web: ids e caminhos de arquivo validados, lista de Hosts (DNS rebinding), bloqueio de pedidos de outra origem (CSRF), JSON só com Content-Type, CSP e cabeçalhos. Ver [SECURITY.md](../SECURITY.md). | Flask |
 | `rede.py` | Downloads feitos pelo servidor (cadastro, auditoria, rastreamento): só http(s), só IP público, cada redirecionamento conferido (SSRF); opcionalmente registra a cadeia de redirecionamentos e corta respostas grandes. | requests |
 | `privacidade.py` | Lista, exporta e apaga tudo de um cliente (LGPD, Art. 18). Fonte de verdade de onde o sistema grava dados por cliente. Ver [LGPD.md](LGPD.md). | — |
+| `guias/` | Guias do plano por cliente: modelos em `guias/modelos/` (Jinja) preenchidos com o último radar real, o cadastro e o rastreamento, gravados em `entregas/<id>/` depois de cada radar real. Texto vindo das IAs é escapado (sem HTML nem link). Guia sem `gerado: portal` no cabeçalho é escrito à mão e não é sobrescrito. | Jinja2 |
 | `plano_correcao.py` | Monta o plano de correção em HTML a partir dos guias em `entregas/<id>/*.md`. | Markdown |
 
 ## Dados em disco

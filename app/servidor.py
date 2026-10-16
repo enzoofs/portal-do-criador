@@ -646,7 +646,8 @@ def api_iniciar(cid):
     if not corpo.get("demo") and not corpo.get("confirmado") and not gratis:
         return jsonify({"erro": "Execução paga sem confirmação."}), 400
     demo = bool(corpo.get("demo"))
-    if corpo["tipo"] in ("pauta", "rastreio") and not demo:  # radar demo: pauta e rastreio também são demo
+    # pauta de radar demo também é demo (grátis). O rastreio não herda: é grátis e lê o site como está no ar.
+    if corpo["tipo"] == "pauta" and not demo:
         run = dados.ultimo_radar(cid)
         demo = bool(run and run["demo"])
     if corpo["tipo"] == "artigos":  # artigos seguem o modo da pauta

@@ -70,6 +70,20 @@ def cmd_radar(args):
             encoding="utf-8")
     print(f"Dados:     {resultado['_arquivo']}")
     print(f"Relatório: {relatorio.salvar(resultado, rastreador.do_run(resultado))}")
+    if not args.demo:
+        import guias
+        escritos = guias.gerar(resultado["cliente"], resultado, rastreador.do_run(resultado))
+        print(f"Guias:     {len(escritos)} em entregas/{args.cliente}/")
+
+
+def cmd_guias(args):
+    """Refaz os guias do plano a partir do último radar real (os escritos à mão ficam como estão)."""
+    import guias
+    run = _carregar_run(args.cliente, demo=False)
+    if not run:
+        sys.exit("Nenhum radar real para este cliente. Rode: python main.py radar <cliente> --confirmar")
+    for p in guias.gerar(executor.carregar_cliente(args.cliente), run, rastreador.do_run(run) or rastreador.ultimo(args.cliente)):
+        print(p)
 
 
 def cmd_relatorio(args):
@@ -307,6 +321,10 @@ def main():
     st.add_argument("--publicar", action="store_true", help="versão para o ar: sem faixa de prévia e sem campos tracejados")
     st.add_argument("--com-pendencias", action="store_true", help="inclui artigos com dados a confirmar (marcados)")
     st.set_defaults(func=cmd_site)
+
+    gu = sub.add_parser("guias", help="refaz os guias do plano a partir do último radar real")
+    gu.add_argument("cliente")
+    gu.set_defaults(func=cmd_guias)
 
     en = sub.add_parser("entregas", help="monta o plano de correção (guias + estado do conteúdo)")
     en.add_argument("cliente")

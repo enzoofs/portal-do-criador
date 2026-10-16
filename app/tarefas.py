@@ -15,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 
 import custos
+import guias
 from app import dados
 from conteudo import fluxo
 from conteudo import pauta as pauta_mod
@@ -98,6 +99,9 @@ def _radar(t: Tarefa, demo: bool, repeticoes):
             {k: v for k, v in resultado.items() if k != "_arquivo"}, ensure_ascii=False, indent=2),
             encoding="utf-8")
     relatorio.salvar(resultado, rastreador.do_run(resultado))
+    if not demo:
+        escritos = guias.gerar(resultado["cliente"], resultado, rastreador.do_run(resultado))
+        t.log(f"{len(escritos)} guias do plano atualizados")
     r = resultado["metricas"]["resumo"]
     t.log(f"Visibilidade: {r['visibilidade']}% ({r['mencoes']}/{r['respostas_descoberta']})")
 

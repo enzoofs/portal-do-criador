@@ -137,9 +137,11 @@ def plano(cliente_id: str, run: dict | None) -> list[dict]:
         status = "feito" if a.get("resolvida") else estado.get(a["titulo"], "pendente")
         if (a.get("origem") == "site" and not a.get("resolvida") and status == "feito"
                 and marcadas_em.get(a["titulo"], "") < rast["gerado_em"]):
-            quando = datetime.fromisoformat(rast["gerado_em"]).strftime("%d/%m/%Y")
-            a = {**a, "nota": f"Marcada como feita, mas o rastreio de {quando} ainda encontra o problema.",
-                 "nota_alerta": True}
+            marcada = marcadas_em.get(a["titulo"])
+            quando = datetime.fromisoformat(rast["gerado_em"]).strftime("%d/%m às %H:%M")
+            em = f" em {datetime.fromisoformat(marcada).strftime('%d/%m às %H:%M')}" if marcada else ""
+            a = {**a, "nota": f"Alguém marcou como feita{em}, mas o rastreio do site de {quando} ainda encontra "
+                              "o problema; por isso voltou para pendente.", "nota_alerta": True}
             status = "pendente"
         saida.append({**a, "status": status, "guia": guia_para(cliente_id, a["titulo"])})
     return saida

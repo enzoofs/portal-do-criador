@@ -479,6 +479,76 @@ def teste_rastreio_e_tarefa_gratis():
     assert c.post("/api/c/exemplo/tarefas", json={"tipo": "radar"}).status_code == 400
 
 
+def teste_rastreio_nao_herda_o_modo_demonstracao_do_radar():
+    """16/10/2026: no teste do Fran, depois de um radar de demonstração o "Rastrear de novo" virou
+    demonstração e travou em "sem site gerado". O rastreio é grátis e sempre lê o site real; só a pauta
+    herda o modo do radar."""
+    from app import dados, tarefas
+    pedidos = []
+    originais = tarefas.iniciar, dados.ultimo_radar
+
+    class Falsa:
+        def to_dict(self):
+            return {"id": "x"}
+    tarefas.iniciar = lambda tipo, cid, demo, **_: pedidos.append((tipo, demo)) or Falsa()
+    dados.ultimo_radar = lambda cid: {"demo": True}       # o último radar foi de demonstração
+    try:
+        c = _portal()
+        assert c.post("/api/c/exemplo/tarefas", json={"tipo": "rastreio"}).status_code == 200
+        assert c.post("/api/c/exemplo/tarefas", json={"tipo": "pauta", "confirmado": True}).status_code == 200
+    finally:
+        tarefas.iniciar, dados.ultimo_radar = originais
+    assert pedidos == [("rastreio", False), ("pauta", True)], pedidos
+
+
+def teste_guias_saem_do_radar_de_cada_cliente():
+    """16/10/2026: a TimeLabs ficou sem guia nenhum no plano (os da Última Digital foram escritos à mão).
+    Agora cada radar real gera os guias do cliente com os dados dele; o nome que a IA inventou não vira
+    HTML nem link; guia escrito à mão fica; o de robôs só existe quando há robô bloqueado."""
+    import tempfile
+    from pathlib import Path
+
+    import guias
+    import plano_correcao
+    perigosa = "<script>alert(1)</script> [clique](javascript:alert(1))"
+    cliente = {**CLIENTE, "id": "guias_teste", "site": SITE + "/", "dominios": ["nortedigital.example"],
+               "perfil": {"servicos": ["tráfego pago"], "cta": {"whatsapp": "5531999990000"}}}
+    run = {"demo": False, "gerado_em": "2026-10-16T15:00:00", "provedores": {"chatgpt_app": "x"},
+           "auditoria": [{"nome": "Robôs das IAs conseguem acessar o site", "ok": False,
+                          "detalhe": "bloqueados: GPTBot (treino do ChatGPT)", "impacto": ""}],
+           "metricas": {"resumo": {"confusoes": [{"provedor": "chatgpt_app", "empresa": perigosa}],
+                                   "marca_conhecida": 1, "perguntas_marca": 3},
+                        "fontes": [{"dominio": "ranking-bh.example", "respostas": 2, "tipo": "terceiro"},
+                                   {"dominio": "empresa-qualquer.example", "respostas": 3, "tipo": "terceiro"}],
+                        "paginas": [], "ranking": [{"nome": "Agência Alfa", "e_a_marca": False}]}}
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = Path(tmp) / "guias_teste"
+        pasta.mkdir()
+        (pasta / "03-avaliacoes.md").write_text("---\ntitulo: escrito à mão\n---\nTexto da equipe.", encoding="utf-8")
+        nomes = {p.name for p in guias.gerar(cliente, run, pasta=Path(tmp))}
+        assert nomes == {"01-identidade-oficial.md", "02-listas-de-terceiros.md", "05-bing-e-plataformas.md",
+                         "06-robos-de-treino.md", "07-anuncios-chatgpt.md"}, nomes
+        assert "Texto da equipe." in (pasta / "03-avaliacoes.md").read_text(encoding="utf-8")
+        identidade = plano_correcao.md_para_html((pasta / "01-identidade-oficial.md").read_text(encoding="utf-8"))
+        assert "alert(1)" in identidade, "o nome da empresa confundida tem que aparecer, como texto"
+        assert "<script" not in identidade and 'href="javascript' not in identidade, identidade
+        listas = (pasta / "02-listas-de-terceiros.md").read_text(encoding="utf-8")
+        assert "ranking-bh.example" in listas and "empresa-qualquer.example" not in listas
+        assert "+55 31 99999-0000" in (pasta / "05-bing-e-plataformas.md").read_text(encoding="utf-8")
+        assert "Se o site ainda não tiver" in identidade        # sem rastreio: não afirma que falta
+        # 16/10/2026: o guia mandava criar timelabs.com.br/sobre, que já existia
+        sobre = {"paginas": [{"url": f"{SITE}/sobre", "status": 200}]}
+        guias.gerar(cliente, run, sobre, pasta=Path(tmp))
+        texto = (pasta / "01-identidade-oficial.md").read_text(encoding="utf-8")
+        assert "já existe" in texto and "Criar a página" not in texto, texto
+        guias.gerar(cliente, run, {"paginas": [{"url": f"{SITE}/", "status": 200}]}, pasta=Path(tmp))
+        assert "O rastreamento não encontrou uma página" in (pasta / "01-identidade-oficial.md").read_text(encoding="utf-8")
+        run["auditoria"] = []
+        guias.gerar(cliente, run, pasta=Path(tmp))
+        assert not (pasta / "06-robos-de-treino.md").exists()
+        assert guias.gerar(cliente, {**run, "demo": True}, pasta=Path(tmp)) == []
+
+
 def _run_falso(perguntas_e_fontes: list[tuple[str, list[str], bool]]) -> dict:
     """Radar mínimo: (pergunta, URLs citadas, marca citada?) por resposta."""
     perguntas = list(dict.fromkeys(p for p, _, _ in perguntas_e_fontes))

@@ -79,7 +79,7 @@ por mensagem, nunca junto com o link, e feche o túnel (Ctrl+C) quando acabar. V
 ## Testes e checagens
 
 ```bash
-python testes.py                     # 26 testes, sem IA, sem rede, sem custo
+python testes.py                     # 28 testes, sem IA, sem rede, sem custo
 ruff check .                         # estilo, erros e regras de segurança (pyproject.toml)
 bandit -c pyproject.toml -r . -q
 ```
@@ -114,6 +114,7 @@ O gasto real de cada execução vai para `data/gastos.jsonl` (uso interno; não 
 | `python main.py escrever <cliente> [--temas 1,3] [--confirmar]` | Escreve os artigos (rascunhos) |
 | `python main.py wordpress <cliente> <slug\|todos> [--publicar]` | Envia ao site do cliente como rascunho |
 | `python main.py indexnow <cliente> <url>...` | Avisa o Bing sobre URLs publicadas |
+| `python main.py guias <cliente>` | Refaz os guias do plano a partir do último radar real (o radar real já faz sozinho) |
 | `python main.py entregas <cliente>` | Gera o plano de correção em HTML |
 | `python main.py site <cliente> [--publicar] [--com-pendencias]` | Gera o site completo do cliente; ver [docs/SITES.md](docs/SITES.md) |
 | `python main.py exportar <cliente> [--destino pasta]` | Junta todos os dados do cliente num .zip (LGPD: acesso e portabilidade) |
@@ -169,6 +170,7 @@ site_cliente/             site do cliente
 midia/termos.py           importa termos de pesquisa do Google Ads (CSV)
 medicao.py                GA4 e Search Console
 cadastro.py               rascunho do cadastro de cliente a partir do site
+guias/                    modelos dos guias do plano, preenchidos com o radar de cada cliente
 plano_correcao.py         plano de correção (guias em entregas/<cliente>/*.md)
 ia.py                     chamada de IA com saída estruturada (Claude ou OpenAI)
 custos.py, orcamento.py   preços, estimativas, trava de gasto, registro de gastos
