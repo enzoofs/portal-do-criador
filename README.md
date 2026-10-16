@@ -10,8 +10,13 @@ O que ele faz, por cliente:
 1. **Radar**: faz ao ChatGPT e ao Google as perguntas que um cliente real faria ("qual a melhor
    agência de tráfego pago em BH?"), várias vezes, e mede se a marca aparece, quem aparece no lugar
    e quais sites as IAs usaram como fonte. Mostra a margem de erro de cada número.
+   Junto, o **rastreamento do site**: percorre página por página como um robô de IA (sem executar
+   JavaScript, respeitando o robots.txt) e cruza com o radar: qual página do site responde a cada
+   pergunta, se as páginas que as IAs citaram estão abrindo e o que as páginas de concorrentes citadas
+   têm que as do cliente não têm. Grátis: não usa IA nem API paga.
 2. **Plano de ações**: o que corrigir (identidade da empresa, robôs bloqueados, presença em sites de
-   terceiros, avaliações), com guias prontos.
+   terceiros, avaliações, páginas que faltam ou estão fracas), com guias prontos. Um novo rastreamento
+   confirma sozinho o que foi corrigido no site.
 3. **Conteúdo**: pauta e artigos escritos a partir do radar. O redator não inventa dados: o que falta
    vira pendência para o especialista responder num formulário. Envio sempre como rascunho
    (WordPress, Webflow, Shopify ou Wix).
@@ -52,19 +57,37 @@ python main.py radar exemplo --demo
 python main.py pauta exemplo --demo
 python main.py escrever exemplo      # pauta de demonstração = artigos de demonstração, sem custo
 python main.py site exemplo          # prévia do site em entregas/exemplo/site-novo/
+python main.py site exemplo --publicar && python main.py rastrear exemplo --demo   # rastreia o site gerado, sem rede
 ```
+
+O `exemplo.json` do repositório vem sem perguntas: cadastre algumas em **Configurar** antes do radar
+de demonstração, ou ele sai vazio.
+
+### Compartilhar com a equipe (ngrok)
+
+Para a equipe usar o Portal que roda nesta máquina, por um tempo (um teste, uma reunião):
+
+1. Uma vez: conta grátis no [ngrok](https://dashboard.ngrok.com) e `ngrok config add-authtoken <token>`.
+2. No `.env`: `PORTAL_HOST_PUBLICO` (o domínio do túnel, sem `https://`) e `PORTAL_SENHA` (12
+   caracteres ou mais). O usuário é `equipe` (`PORTAL_USUARIO` muda).
+3. `python main.py servir --sem-navegador` e, em outro terminal, `ngrok http 5050 --url https://<domínio>`.
+
+No endereço do túnel, todo pedido exige usuário e senha; sem senha no `.env`, ele fica fechado. Quem
+tem a senha faz tudo o que o operador faz (inclusive execuções pagas e ver todos os clientes): mande
+por mensagem, nunca junto com o link, e feche o túnel (Ctrl+C) quando acabar. Ver [SECURITY.md](SECURITY.md).
 
 ## Testes e checagens
 
 ```bash
-python testes.py                     # 19 testes, sem IA, sem rede, sem custo
+python testes.py                     # 26 testes, sem IA, sem rede, sem custo
 ruff check .                         # estilo, erros e regras de segurança (pyproject.toml)
 bandit -c pyproject.toml -r . -q
 ```
 
-Cada teste reproduz um erro real já corrigido (ver a docstring de cada um): análise do radar,
-pendências, geração e checagem do site, LGPD (exportar e apagar) e segurança (leitura de arquivo
-fora da pasta, CSRF, DNS rebinding, XSS, SSRF, upload). O CI roda tudo isso a cada push, mais
+Cada teste reproduz um erro real já corrigido ou um comportamento combinado (ver a docstring de cada
+um): análise do radar, pendências, geração e checagem do site, rastreamento e cruzamento com o radar
+(sobre um site falso em memória), LGPD (exportar e apagar) e segurança (leitura de arquivo fora da
+pasta, CSRF, DNS rebinding, XSS, SSRF, upload). O CI roda tudo isso a cada push, mais
 `pip-audit` nas dependências e `gitleaks` no histórico. Como contribuir: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Custos: nada pago roda sem confirmação
@@ -86,6 +109,7 @@ O gasto real de cada execução vai para `data/gastos.jsonl` (uso interno; não 
 | `python main.py servir [--porta 5050] [--sem-navegador]` | Abre o app |
 | `python main.py radar <cliente> [--demo] [--ias chatgpt_app,google_ia] [--repeticoes 3] [--confirmar]` | Mede a visibilidade nas IAs |
 | `python main.py relatorio data/runs/<cliente>/<arquivo>.json` | Recalcula e regera o relatório HTML |
+| `python main.py rastrear <cliente> [--limite 300] [--demo]` | Percorre o site como um robô de IA (grátis); o radar já faz isso sozinho |
 | `python main.py pauta <cliente> [--demo] [--confirmar]` | Monta a pauta de artigos a partir do último radar |
 | `python main.py escrever <cliente> [--temas 1,3] [--confirmar]` | Escreve os artigos (rascunhos) |
 | `python main.py wordpress <cliente> <slug\|todos> [--publicar]` | Envia ao site do cliente como rascunho |
@@ -124,7 +148,10 @@ radar/                    medição de visibilidade
   executor.py             roda perguntas × IAs × rodadas em paralelo e salva em data/runs/
   extrator.py             tira de cada resposta: a marca aparece? quem foi recomendado?
   analise.py              métricas, ranking de concorrentes, tipos de fonte
-  auditoria.py            checagens técnicas do site (robôs, robots.txt, sitemap, identidade)
+  auditoria.py            checagens da página inicial (robôs, robots.txt pelo RFC 9309, sitemap, identidade)
+  pagina.py               o que um robô encontra numa página HTML (título, texto, links, fichas)
+  rastreador.py           percorre o site página por página e lista os problemas; salva em data/rastreios/
+  cruzamento.py           radar × rastreamento: pergunta × página, páginas citadas, ações do plano
   relatorio.py            relatório HTML autocontido
 conteudo/                 pauta → artigos → publicação
   pauta.py, redator.py    temas e artigos (com marcadores [[...]] para o que falta)

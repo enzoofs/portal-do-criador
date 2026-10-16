@@ -5,6 +5,7 @@ main.py — Ponto de entrada do Portal do Criador.
     python main.py radar exemplo --demo       # respostas fictícias, sem custo
     python main.py radar exemplo --ias chatgpt,claude --repeticoes 2
     python main.py relatorio data/runs/exemplo/<arquivo>.json   # refaz só o HTML
+    python main.py rastrear exemplo --demo      # percorre o site como um robô de IA (grátis)
 
     python main.py pauta exemplo                # pauta de artigos a partir do radar
     python main.py escrever exemplo --temas 1,2 # rascunhos para aprovação
@@ -24,7 +25,7 @@ import orcamento
 from config import settings
 from conteudo import fluxo, publicador
 from conteudo import pauta as pauta_mod
-from radar import analise, executor, relatorio
+from radar import analise, executor, rastreador, relatorio
 from radar.modelos import Fonte, Resposta
 
 # --------------------------------------------------------------------------
@@ -68,7 +69,7 @@ def cmd_radar(args):
             {k: v for k, v in resultado.items() if k != "_arquivo"}, ensure_ascii=False, indent=2),
             encoding="utf-8")
     print(f"Dados:     {resultado['_arquivo']}")
-    print(f"Relatório: {relatorio.salvar(resultado)}")
+    print(f"Relatório: {relatorio.salvar(resultado, rastreador.do_run(resultado))}")
 
 
 def cmd_relatorio(args):
@@ -81,7 +82,23 @@ def cmd_relatorio(args):
                                              resultado.get("auditoria", []))
     resultado["respostas"] = [r.to_dict() for r in respostas]   # já sem listas/rankings como empresa
     caminho.write_text(json.dumps(resultado, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(relatorio.salvar(resultado))
+    print(relatorio.salvar(resultado, rastreador.do_run(resultado)))   # com o rastreamento feito junto com o radar
+
+
+def cmd_rastrear(args):
+    from radar import cruzamento
+    run = _carregar_run(args.cliente, demo=True)
+    try:
+        r = rastreador.rastrear(executor.carregar_cliente(args.cliente), limite=args.limite, demo=args.demo,
+                                extras=cruzamento.urls_citadas(run) if run else None)
+    except RuntimeError as e:
+        sys.exit(str(e))
+    caminho = rastreador.salvar(r)
+    for p in rastreador.problemas(r):
+        print(f"  {p['nivel']:<5}  {p['titulo']} ({p['total']})")
+    if r["parou_no_limite"]:
+        print(f"Parou no limite de {r['limite']} páginas; use --limite para ler mais.")
+    print(f"Dados: {caminho}")
 
 
 def _carregar_run(cliente_id: str, demo: bool) -> dict | None:
@@ -172,6 +189,12 @@ def cmd_servir(args):
     from app.servidor import app
     url = f"http://127.0.0.1:{args.porta}"
     print(f"Portal do Criador em {url}  (Ctrl+C para parar)")
+    if settings.PORTAL_HOST_PUBLICO:
+        if len(settings.PORTAL_SENHA) < 12:
+            sys.exit("PORTAL_HOST_PUBLICO está no .env, mas PORTAL_SENHA tem menos de 12 caracteres. "
+                     "O endereço público não abre sem uma senha forte.")
+        print(f"Equipe: https://{settings.PORTAL_HOST_PUBLICO} (usuário {settings.PORTAL_USUARIO!r} e a senha do .env). "
+              f"Abra o túnel com: ngrok http {args.porta} --url https://{settings.PORTAL_HOST_PUBLICO}")
     if not args.sem_navegador:
         import threading
         import webbrowser
@@ -236,6 +259,13 @@ def main():
     r.add_argument("--repeticoes", type=int, default=1, help="vezes que cada pergunta é feita")
     _flags_custo(r)
     r.set_defaults(func=cmd_radar)
+
+    ra = sub.add_parser("rastrear", help="percorre o site do cliente como um robô de IA (grátis, sem IA)")
+    ra.add_argument("cliente")
+    ra.add_argument("--limite", type=int, default=settings.RASTREIO_LIMITE,
+                    help=f"máximo de páginas (padrão {settings.RASTREIO_LIMITE})")
+    ra.add_argument("--demo", action="store_true", help="lê o site gerado em entregas/<cliente>/site-publicar, sem rede")
+    ra.set_defaults(func=cmd_rastrear)
 
     rel = sub.add_parser("relatorio", help="regera o HTML a partir de um resultado salvo")
     rel.add_argument("arquivo")

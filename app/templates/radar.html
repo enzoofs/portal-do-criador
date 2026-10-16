@@ -12,6 +12,7 @@
   <a class="btn" href="{{ url_for('apresentar', cid=c.id) }}"><span class="play" aria-hidden="true"></span>Apresentar</a>
   <a class="btn leve" href="{{ url_for('radar_relatorio', cid=c.id) }}" target="_blank" rel="noopener">Relatório ↗</a>
   {% endif %}
+  <button class="btn" data-tarefa="rastreio" data-cliente="{{ c.id }}" data-gratis title="Grátis: percorre o site como um robô de IA">Rastrear o site</button>
   <button class="btn primario" data-tarefa="radar" data-cliente="{{ c.id }}">Rodar radar</button>
 {% endcall %}
 
@@ -22,7 +23,7 @@
   <a href="#fontes">Fontes</a>
   <a href="#respostas">Respostas</a>
   {% if v.marca %}<a href="#marca">Marca</a>{% endif %}
-  {% if v.checks %}<a href="#site">Site</a>{% endif %}
+  {% if v.checks or v.site %}<a href="#site">Site</a>{% endif %}
   {% if v.buscas %}<a href="#buscas">Buscas</a>{% endif %}
   <a href="#confianca">Confiabilidade</a>
 </nav>
@@ -166,10 +167,11 @@
 </section>
 {% endif %}
 
-{% if v.checks %}
+{% if v.checks or v.site %}
 <section class="secao" id="site">
-  {{ ui.secao_cab('O site visto pelas IAs', 'Bloqueios e arquivos ausentes impedem que o site seja lido, entendido e citado.',
-                  v.falhas ~ ' de ' ~ v.checks|length ~ ' falharam') }}
+  {% set meta_site %}{% if v.checks %}{{ v.falhas }} de {{ v.checks|length }} checagens falharam{% endif %}{% if v.checks and v.site %} · {% endif %}{% if v.site %}{{ v.site.resumo.lidas }} páginas lidas{% endif %}{% endset %}
+  {{ ui.secao_cab('O site visto pelas IAs', 'Bloqueios, páginas que faltam e páginas fracas impedem que o site seja lido, entendido e citado.', meta_site) }}
+  {% if v.checks %}
   <div class="caixa">
     <ul class="checks">
       {% for ch in v.checks %}
@@ -182,6 +184,16 @@
       {% endfor %}
     </ul>
   </div>
+  {% endif %}
+  {% if v.site %}
+  {% include "_site.html" %}
+  {{ ui.leitura(v.leituras['site'], c) }}
+  {% else %}
+  <div class="caixa mt"><div class="caixa-corpo convite">
+    <p>Rastreie o site para ver, página por página, o que os robôs de IA encontram e qual página responde a cada pergunta do radar. É grátis: não usa IA nem API paga.</p>
+    <button class="btn" data-tarefa="rastreio" data-cliente="{{ c.id }}" data-gratis>Rastrear o site</button>
+  </div></div>
+  {% endif %}
 </section>
 {% endif %}
 
@@ -213,7 +225,7 @@
 </section>
 
 <div class="proximo">
-  <p><b>Próximo passo.</b> {{ v.plano|length }} ações já saíram deste radar, e a pauta ataca cada pergunta em que a marca não apareceu.</p>
+  <p><b>Próximo passo.</b> {{ v.plano|length }} ações já saíram deste radar{% if v.site %} e do rastreamento do site{% endif %}, e a pauta ataca cada pergunta em que a marca não apareceu.</p>
   <div class="acoes">
     <a class="btn primario" href="{{ url_for('plano', cid=c.id) }}">Plano de ações →</a>
     <a class="btn" href="{{ url_for('conteudo', cid=c.id) }}">Conteúdo</a>
@@ -262,6 +274,8 @@
   e mostra quem as IAs indicam, onde pesquisam e o que dizem da marca.</p>
   <div class="acoes"><button class="btn leve" data-tarefa="radar" data-cliente="{{ c.id }}" data-demo>Demonstração (grátis)</button>
     <button class="btn primario" data-tarefa="radar" data-cliente="{{ c.id }}">Rodar o primeiro radar</button></div>
+  {% if rast %}<p class="mt">O site já foi rastreado em <span class="mono">{{ rast.gerado_em|data_br }}</span>:
+    <a href="{{ url_for('rastreio', cid=c.id) }}">ver o rastreamento →</a></p>{% endif %}
 </div>
 {% endif %}
 {% endblock %}

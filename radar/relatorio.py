@@ -14,6 +14,7 @@ import re
 from datetime import datetime
 
 from config import settings
+from radar import auditoria, cruzamento, rastreador
 from radar.modelos import NOMES_PROVEDOR, descrever_coleta, numero_br
 
 MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto",
@@ -111,6 +112,7 @@ section.painel{margin-top:clamp(72px,10vw,120px)}
 .paginas a b{font-weight:600}
 .paginas a:hover{color:var(--accent)}
 .paginas .t{font:500 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+.paginas .cmp{display:block;font-size:13px;color:var(--muted);margin-top:4px;max-width:70ch}
 .amostra{font:400 12.5px/1.6 var(--mono);color:var(--soft);margin:14px 0 0;max-width:90ch}
 
 /* checagens */
@@ -445,28 +447,68 @@ def _painel_marca(res: dict) -> str:
     return _painel("Quando perguntam pelo nome", titulo, lead, "", cartoes, grade="duas")
 
 
-def _painel_tecnico(res: dict) -> str:
+def _check(titulo: str, detalhe: str, texto: str = "", ok: bool = False) -> str:
+    ic = '<span class="ic">✓</span>' if ok else '<span class="ic x">✕</span>'
+    p = f"<p>{_e(texto)}</p>" if texto else ""
+    return (f'<div class="cartao{"" if ok else " foco"}"><div class="check">{ic}<div>'
+            f'<h3>{_e(titulo)}</h3><div class="det">{_e(detalhe)}</div>{p}</div></div></div>')
+
+
+def _figura_site(cz: dict) -> str:
+    """Cada pergunta de indicação e a página do site mais próxima do assunto; as páginas citadas."""
+    rotulo = {"sem_pagina": "sem página", "pagina_fraca": "página fraca", "pagina_ok": "página ok"}
+    linhas = []
+    for q in cz["perguntas"]:
+        onde = auditoria.caminho_de(q["pagina"]["url"]) if q["pagina"] else "nenhuma página trata disso"
+        motivos = f' ({"; ".join(q["motivos"])})' if q["motivos"] else ""
+        comparacao = f'<span class="cmp">{_e(q["comparacao"])}</span>' if q.get("comparacao") else ""
+        linhas.append(f'<li><span>“{_e(q["pergunta"])}”{comparacao}</span><span class="t">{_e(onde)} · '
+                      f'{_e(rotulo[q["diagnostico"]] + motivos)}</span></li>')
+    partes = ['<div class="eixo">Cada pergunta e a página do site mais próxima do assunto</div>',
+              f'<ul class="paginas">{"".join(linhas)}</ul>'] if linhas else []
+    if cz["paginas_citadas"]:
+        citadas = "".join(f'<li><span>{_e(auditoria.caminho_de(c["url"]))}</span><span class="t">{c["vezes"]}× · '
+                          f'{_e(c["estado"])}</span></li>' for c in cz["paginas_citadas"][:6])
+        partes.append(f'<div class="eixo" style="margin-top:28px">Páginas do site que as IAs citaram</div>'
+                      f'<ul class="paginas">{citadas}</ul>')
+    return "".join(partes)
+
+
+def _painel_tecnico(res: dict, rastreio: dict | None = None) -> str:
     checks = res.get("auditoria") or []
-    if not checks:
+    if not checks and not rastreio:
         return ""
     falhas = [c for c in checks if not c["ok"]]
-    cartoes = []
-    for c in sorted(checks, key=lambda c: c["ok"]):  # falhas primeiro
-        ic = '<span class="ic">✓</span>' if c["ok"] else '<span class="ic x">✕</span>'
-        impacto = f'<p>{_e(c["impacto"])}</p>' if not c["ok"] else ""
-        cartoes.append(f'<div class="cartao{"" if c["ok"] else " foco"}"><div class="check">{ic}<div>'
-                       f'<h3>{_e(c["nome"])}</h3><div class="det">{_e(c["detalhe"])}</div>{impacto}'
-                       f'</div></div></div>')
-    bloqueio = any("Robôs" in c["nome"] for c in falhas)
-    titulo = f"{len(falhas)} de {len(checks)} checagens falharam"
-    titulo += " — inclusive o bloqueio a robôs de IA." if bloqueio else "."
-    lead = ("Testamos o site como cada IA o acessa. Bloqueios e arquivos ausentes impedem que ele "
-            "seja lido, entendido e citado.")
-    return _painel("O site visto pelas IAs", titulo, lead, "", cartoes, grade="tres")
+    cartoes = [_check(c["nome"], c["detalhe"], c["impacto"], c["ok"]) for c in sorted(checks, key=lambda c: c["ok"])]
+    partes, figura, lead = [], "", ""
+    if checks:
+        partes.append(f"{len(falhas)} de {len(checks)} checagens falharam")
+        lead = ("Testamos o site como cada IA o acessa. Bloqueios e arquivos ausentes impedem que ele "
+                "seja lido, entendido e citado.")
+    if rastreio:
+        cz, rs = cruzamento.cruzar(res, rastreio), rastreador.resumo(rastreio)
+        s = cz["resumo"]
+        if s["sem_pagina"]:
+            partes.append(f"{s['sem_pagina']} das {len(cz['perguntas'])} perguntas não têm página no site")
+        if s["fracas"]:
+            partes.append(f"{s['fracas']} caem em páginas fracas")
+        lead += (f"{' Também percorremos' if lead else 'Percorremos'} {rs['lidas']} páginas do site do jeito que um "
+                 "robô de IA lê, e procuramos a página que responde a cada pergunta (pelas palavras em comum: é uma "
+                 "aproximação).")
+        if any(q.get("comparacao") for q in cz["perguntas"]):
+            lead += (" Ao lado, o que as páginas de concorrentes citadas pelas IAs têm em comum: é uma referência, "
+                     "não prova do motivo da citação.")
+        figura = _figura_site(cz)
+        cartoes = [_check(f"{p['titulo']} ({p['total']})", " · ".join(auditoria.caminho_de(x["url"]) for x in p["paginas"][:3]),
+                          p["detalhe"]) for p in rastreador.problemas(rastreio) if p["nivel"] == "erro"][:3] + cartoes
+    titulo = "; ".join(partes) or "O site está em condições de ser lido pelas IAs"
+    titulo = titulo[0].upper() + titulo[1:]
+    titulo += " — inclusive o bloqueio a robôs de IA." if any("Robôs" in c["nome"] for c in falhas) else "."
+    return _painel("O site visto pelas IAs", titulo, lead, figura, cartoes, grade="tres")
 
 
-def _painel_plano(res: dict) -> str:
-    recs = res["metricas"]["recomendacoes"]
+def _painel_plano(res: dict, rastreio: dict | None = None) -> str:
+    recs = cruzamento.plano(res, rastreio)
     if not recs:
         return ""
     itens = "".join(f'<li><h3>{_e(r["titulo"])}</h3><p>{_e(r["texto"])}</p></li>' for r in recs)
@@ -501,13 +543,14 @@ As empresas indicadas foram identificadas automaticamente em cada resposta.</p><
     return "".join(partes)
 
 
-def gerar(resultado: dict) -> str:
+def gerar(resultado: dict, rastreio: dict | None = None) -> str:
+    """HTML do relatório. Com `rastreio`, o painel do site e o plano incluem o rastreamento."""
     cli = resultado["cliente"]
     corpo = "".join([
         _abertura(resultado), _painel_ranking(resultado), _painel_matriz(resultado),
         _painel_fontes(resultado), _painel_buscas(resultado), _painel_marca(resultado),
-        _painel_tecnico(resultado),
-        _painel_plano(resultado), _anexo(resultado),
+        _painel_tecnico(resultado, rastreio),
+        _painel_plano(resultado, rastreio), _anexo(resultado),
     ])
     return f"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -515,11 +558,11 @@ def gerar(resultado: dict) -> str:
 <body><main class="pagina">{corpo}<footer class="eyebrow">TimeLabs · Portal do Criador</footer></main></body></html>"""
 
 
-def salvar(resultado: dict) -> str:
+def salvar(resultado: dict, rastreio: dict | None = None) -> str:
     settings.RELATORIOS_DIR.mkdir(parents=True, exist_ok=True)
     cli = resultado["cliente"]["id"]
     carimbo = datetime.fromisoformat(resultado["gerado_em"]).strftime("%Y%m%d-%H%M%S")
     sufixo = "-demo" if resultado["demo"] else ""
     caminho = settings.RELATORIOS_DIR / f"radar-{cli}-{carimbo}{sufixo}.html"
-    caminho.write_text(gerar(resultado), encoding="utf-8")
+    caminho.write_text(gerar(resultado, rastreio), encoding="utf-8")
     return str(caminho)

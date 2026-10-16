@@ -41,6 +41,10 @@ TERMOS = {
                                  "e página Sobre. Sem eles, a IA mistura empresas de nome parecido."),
     "bing": ("Bing", "o ChatGPT pesquisa a web pelo índice do Bing. Estar bem no Bing é pré-requisito para "
                      "aparecer no ChatGPT."),
+    "rastreio": ("Rastreamento", "o Portal abre página por página do site como um robô de IA: sem executar "
+                                 "JavaScript, respeitando o robots.txt, e anota o que encontra."),
+    "pagina_proxima": ("Página mais próxima", "a página do site que mais tem as palavras da pergunta no título, no H1 "
+                                              "e no endereço. É uma aproximação: confira se é mesmo a página certa."),
 }
 
 # Como resolver cada checagem técnica que falhar (nome da checagem -> passo, guia)
@@ -102,6 +106,28 @@ def _alvos_terceiros(m: dict) -> list[dict]:
         desc = SITES.get(dom) or ("lista ou ranking de empresas" if tipo == "lista" else "site de terceiros")
         alvos.append({"dominio": dom, "tipo": tipo, "descricao": desc, "vezes": f["respostas"]})
     return alvos[:5]
+
+
+def _site(s: dict, cli: dict) -> dict:
+    cz, res = s["cruz"], s["resumo"]
+    n = len(s["perguntas"])
+    partes = []
+    if cz["sem_pagina"]:
+        partes.append(f"{cz['sem_pagina']} das {n} perguntas de indicação não têm página no site que trate do assunto")
+    if cz["fracas"]:
+        partes.append(f"{cz['fracas']} caem numa página com problema")
+    if cz["citadas_com_problema"]:
+        partes.append(f"{cz['citadas_com_problema']} das páginas que as IAs citaram não servem hoje")
+    if partes:
+        aviso = (f"Lendo o site como um robô de IA ({res['lidas']} páginas): " + "; ".join(partes) + ". "
+                 "Sem uma página boa para cada pergunta, a IA não tem o que citar da " + cli["nome"] + ".")
+    else:
+        aviso = (f"Lendo o site como um robô de IA ({res['lidas']} páginas), cada pergunta tem uma página em condições "
+                 "de ser citada. O que falta está fora do site: listas, diretórios e avaliações.")
+    passos = [a["titulo"] for a in s["acoes"][:4]]
+    passos.append("Rastrear o site de novo depois das correções: o plano mostra o que foi resolvido.")
+    return {"tom": "alerta" if partes or res["erros"] else "ok", "aviso": aviso,
+            "termos": [_termo("rastreio", cli), _termo("pagina_proxima", cli)], "passos": passos}
 
 
 def montar(run: dict, v: dict) -> dict:
@@ -191,6 +217,10 @@ def montar(run: dict, v: dict) -> dict:
         L["marca"] = {"tom": "alerta" if confundiu else "ok", "aviso": aviso,
                       "termos": [_termo("identidade", cli)], "passos": passos,
                       "guia": _guia(cid, "01-identidade-oficial")}
+
+    # --- site: o rastreamento cruzado com o radar ---
+    if v.get("site"):
+        L["site"] = _site(v["site"], cli)
 
     # --- confiança ---
     L["confianca"] = {

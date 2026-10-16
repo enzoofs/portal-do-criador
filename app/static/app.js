@@ -24,7 +24,8 @@ function aviso(texto) {
 }
 $$(".toast").forEach((el) => setTimeout(() => el.remove(), 5200));
 
-const NOMES = { radar: "Radar de visibilidade", pauta: "Pauta de conteúdo", artigos: "Escrever artigos" };
+const NOMES = { radar: "Radar de visibilidade", pauta: "Pauta de conteúdo", artigos: "Escrever artigos",
+  rastreio: "Rastreamento do site" };
 const usd = (v) => "US$ " + Number(v).toFixed(2).replace(".", ",");
 // Texto vindo do servidor que entra em innerHTML passa por aqui (a CSP é a segunda barreira)
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -47,7 +48,9 @@ function painelExecucao(tarefa) {
   pre.textContent = tarefa.linhas.slice(-40).join("\n");
   pre.scrollTop = pre.scrollHeight;
   const b = $("[data-recarregar]", el);
-  if (b) b.onclick = () => location.reload();
+  // o rastreamento tem tela própria (o radar de um cliente novo ainda está vazio)
+  if (b) b.onclick = () => (tarefa.tipo === "rastreio" && tarefa.status === "ok"
+    ? location.assign(`/c/${encodeURIComponent(tarefa.cliente_id)}/rastreio`) : location.reload());
 }
 
 async function acompanhar(id) {
@@ -73,6 +76,7 @@ async function pedirConfirmacao(botao) {
   const { cliente: cid, tarefa: tipo } = botao.dataset;
   const temas = botao.dataset.temas ? botao.dataset.temas.split(",").map(Number) : null;
   if (botao.dataset.demo !== undefined) return iniciar(cid, tipo, { demo: true, temas });
+  if (botao.dataset.gratis !== undefined) return iniciar(cid, tipo, {});  // sem custo: sem janela de custo
 
   const dlg = $("#custo");
   const rodadas = $("select[name=rodadas]", dlg);

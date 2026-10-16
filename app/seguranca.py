@@ -9,7 +9,9 @@ consegue mandar pedidos para ele. Sem estas proteções, um site malicioso poder
     invertida passa pelas rotas do Flask e vira separador de pasta).
 
 Regras:
-  1. Host só 127.0.0.1, localhost ou [::1].
+  1. Host só 127.0.0.1, localhost ou [::1]. Exceção: o endereço do túnel para a equipe
+     (PORTAL_HOST_PUBLICO no .env), onde todo pedido exige usuário e senha (HTTP Basic, sobre o
+     HTTPS do túnel); sem senha configurada, esse endereço fica fechado.
   2. Pedido que altera algo (POST etc.) vindo de outra origem é recusado.
   3. API JSON só com Content-Type application/json (pedido "simples" de outro site não passa).
   4. Todo identificador que vem da URL passa por um padrão estrito; arquivo servido precisa
@@ -17,11 +19,14 @@ Regras:
   5. Cabeçalhos de segurança em todas as respostas; CSP estrita nas telas do Portal.
 """
 
+import hmac
 import re
 from pathlib import Path
 from urllib.parse import urlparse
 
-from flask import abort, request
+from flask import Response, abort, request
+
+from config import settings
 
 HOSTS_PERMITIDOS = {"127.0.0.1", "localhost", "[::1]", "::1"}
 METODOS_SEGUROS = {"GET", "HEAD", "OPTIONS"}
@@ -92,14 +97,28 @@ def _mesma_origem() -> bool:
     return origem != "null" and urlparse(origem).netloc == request.host
 
 
+def _senha_confere() -> bool:
+    """Usuário e senha do túnel. Sem senha configurada, ninguém entra pelo endereço público."""
+    a = request.authorization
+    if not settings.PORTAL_SENHA or a is None or a.type != "basic":
+        return False
+    usuario = hmac.compare_digest((a.username or "").encode(), settings.PORTAL_USUARIO.encode())
+    senha = hmac.compare_digest((a.password or "").encode(), settings.PORTAL_SENHA.encode())
+    return usuario and senha
+
+
 def proteger(app) -> None:
     app.config["MAX_CONTENT_LENGTH"] = LIMITE_PEDIDO
 
     @app.before_request
     def _filtrar():
         host = request.host.rsplit(":", 1)[0] if not request.host.startswith("[") else request.host.split("]")[0] + "]"
-        if host not in HOSTS_PERMITIDOS:
+        publico = bool(settings.PORTAL_HOST_PUBLICO) and host.lower() == settings.PORTAL_HOST_PUBLICO
+        if host not in HOSTS_PERMITIDOS and not publico:
             abort(421)  # Misdirected Request: protege contra DNS rebinding
+        if publico and not _senha_confere():
+            return Response("Usuário e senha da equipe necessários.", 401,
+                            {"WWW-Authenticate": 'Basic realm="Portal do Criador", charset="UTF-8"'})
         if request.method not in METODOS_SEGUROS and not _mesma_origem():
             abort(403)
 

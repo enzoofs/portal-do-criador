@@ -9,11 +9,13 @@ ações é novo: data/plano/<cliente>.json.
 import json
 import re
 import unicodedata
+from datetime import datetime
 from pathlib import Path
 
 from config import settings
 from conteudo import fluxo
 from conteudo import pauta as pauta_mod
+from radar import cruzamento, rastreador
 
 PLANO_DIR = settings.BASE_DIR / "data" / "plano"
 ENTREGAS_DIR = settings.BASE_DIR / "entregas"
@@ -121,18 +123,33 @@ def quadro(cliente_id: str) -> dict:
 # --------------------------------------------------------------------------
 
 def plano(cliente_id: str, run: dict | None) -> list[dict]:
-    """Ações do último radar + o status salvo de cada uma (chave = título)."""
+    """Ações do último radar e do último rastreamento do site + o status salvo de cada uma (chave = título).
+
+    O rastreamento confere as ações do site: a que sumiu do último rastreio aparece como feita, e a
+    que foi marcada como feita antes dele mas continua lá volta para pendente, com o aviso."""
     caminho = PLANO_DIR / f"{cliente_id}.json"
     estado = _ler(caminho) if caminho.exists() else {}
-    acoes = (run or {}).get("metricas", {}).get("recomendacoes", [])
-    return [{**a, "status": estado.get(a["titulo"], "pendente"), "guia": guia_para(cliente_id, a["titulo"])}
-            for a in acoes]
+    marcadas_em = estado.get("_datas", {})
+    rast = rastreador.ultimo(cliente_id)
+    acoes = cruzamento.plano(run, rast, rastreador.anterior(cliente_id)) if run else []
+    saida = []
+    for a in acoes:
+        status = "feito" if a.get("resolvida") else estado.get(a["titulo"], "pendente")
+        if (a.get("origem") == "site" and not a.get("resolvida") and status == "feito"
+                and marcadas_em.get(a["titulo"], "") < rast["gerado_em"]):
+            quando = datetime.fromisoformat(rast["gerado_em"]).strftime("%d/%m/%Y")
+            a = {**a, "nota": f"Marcada como feita, mas o rastreio de {quando} ainda encontra o problema.",
+                 "nota_alerta": True}
+            status = "pendente"
+        saida.append({**a, "status": status, "guia": guia_para(cliente_id, a["titulo"])})
+    return saida
 
 
 def marcar_acao(cliente_id: str, titulo: str, status: str) -> None:
     caminho = PLANO_DIR / f"{cliente_id}.json"
     estado = _ler(caminho) if caminho.exists() else {}
     estado[titulo] = status
+    estado.setdefault("_datas", {})[titulo] = datetime.now().isoformat(timespec="seconds")
     _gravar(caminho, estado)
 
 

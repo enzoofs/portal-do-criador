@@ -11,6 +11,7 @@ from markupsafe import Markup
 
 from app import dados, leituras
 from conteudo import render
+from radar import auditoria, cruzamento, rastreador
 from radar.modelos import NOMES_PROVEDOR, descrever_coleta, numero_br
 
 ROTULO_TIPO = {"concorrente": "concorrente", "terceiro": "outro site", "plataforma": "plataforma",
@@ -94,7 +95,7 @@ def veredito(run: dict) -> Markup:
     return Markup("As IAs já indicam a <em>{}</em> — e dá para ir além.").format(nome)
 
 
-def radar(run: dict) -> dict:
+def radar(run: dict, rastreio: dict | None = None) -> dict:
     cli, m = run["cliente"], run["metricas"]
     r, ranking = m["resumo"], m["ranking"]
     nome, total = cli["nome"], r["respostas_descoberta"]
@@ -207,10 +208,64 @@ def radar(run: dict) -> dict:
         "amostra": (f"{total} respostas de indicação · {_plural(rodadas, 'rodada', 'rodadas')} por pergunta "
                     f"· {descrever_coleta(run['provedores'])}. As respostas variam a cada consulta: os números indicam direção, "
                     "não posição exata."),
-        "plano": m["recomendacoes"],
+        "plano": cruzamento.plano(run, rastreio),
+        "site": site(run, rastreio) if rastreio else None,
     }
     v["leituras"] = leituras.montar(run, v)
     return v
+
+
+# --------------------------------------------------------------------------
+# Site: o rastreamento cruzado com o radar
+# --------------------------------------------------------------------------
+
+def _caminho(url: str) -> str:
+    return auditoria.caminho_de(url)
+
+
+DIAGNOSTICO = {"sem_pagina": ("sem página", "alerta"), "pagina_fraca": ("página fraca", "alerta"),
+               "pagina_ok": ("página ok", "ok")}
+
+
+def site(run: dict, rastreio: dict) -> dict:
+    """Resumo do rastreamento na tela do radar: pergunta × página e páginas citadas pelas IAs."""
+    cz = cruzamento.cruzar(run, rastreio)
+    probs = rastreador.problemas(rastreio)
+    return {
+        "data": rastreio["gerado_em"], "demo": rastreio.get("demo"), "resumo": rastreador.resumo(rastreio),
+        "cruz": cz["resumo"], "acoes": cz["acoes"],
+        "graves": [p for p in probs if p["nivel"] == "erro"][:4], "n_problemas": len(probs),
+        "perguntas": [{**q, "caminho": _caminho(q["pagina"]["url"]) if q["pagina"] else None,
+                       "rotulo": DIAGNOSTICO[q["diagnostico"]][0], "tom": DIAGNOSTICO[q["diagnostico"]][1]}
+                      for q in cz["perguntas"]],
+        "citadas": [{**c, "caminho": _caminho(c["url"]), "ias": [ia(p) for p in c["ias"]]} for c in cz["paginas_citadas"][:8]],
+        "n_citadas": len(cz["paginas_citadas"]),
+    }
+
+
+def rastreio(rast: dict, run: dict | None, anterior: dict | None = None) -> dict:
+    """Tela do rastreamento: todos os problemas, todas as páginas, o que mudou desde o rastreio
+    anterior e, com radar, o cruzamento."""
+    paginas = []
+    for p in sorted(rast["paginas"], key=lambda p: _caminho(p["url"])):
+        if p.get("nao_rastreada"):
+            estado = "robots.txt pede para não rastrear"
+        elif rastreador.quebrada(p):
+            estado = f"HTTP {p['status']}" if p.get("status") else p.get("erro", "sem resposta")
+        elif p.get("destino"):
+            estado = f"redireciona → {_caminho(p['destino'])}"
+        elif "palavras" not in p:
+            estado = p.get("tipo") or "não é HTML"
+        else:
+            estado = "noindex" if p.get("noindex") else "ok"
+        paginas.append({"url": p["url"], "caminho": _caminho(p["url"]), "estado": estado, "titulo": p.get("titulo", ""),
+                        "palavras": p.get("palavras"), "origem": p["origem"],
+                        "ruim": rastreador.quebrada(p) or ("palavras" in p and (p.get("noindex") or rastreador.so_javascript(p)))})
+    probs = [{**p, "paginas": [{**x, "caminho": _caminho(x["url"])} for x in p["paginas"]]}
+             for p in rastreador.problemas(rast)]
+    return {"resumo": rastreador.resumo(rast), "problemas": probs, "paginas": paginas,
+            "site": site(run, rast) if run else None, "rast": rast,
+            "mudancas": rastreador.comparar(anterior, rast) if anterior else None}
 
 
 def _wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:

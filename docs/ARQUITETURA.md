@@ -23,9 +23,11 @@ config/clientes/<id>.json  (perfil + perguntas)
         ▼
 radar/executor.py ──► provedores (coleta) ──► extrator (IA barata) ──► analise ──► data/runs/<id>/<data>.json
         │                                                                            │
-        └─► auditoria.py (checagens do site, sem IA)                                  ▼
+        ├─► auditoria.py (página inicial, sem IA)                                     ▼
+        └─► rastreador.py (site inteiro, em paralelo,  ──► data/rastreios/<id>/   cruzamento.py (radar × site)
+            sem IA; também sozinho: main.py rastrear)                              │
                                                                          radar/relatorio.py → relatorios/*.html
-                                                                         app/telas.py → telas do app
+                                                                         app/telas.py → telas do app e plano
         │
         ▼
 conteudo/pauta.py ──► conteudo/redator.py ──► data/conteudo/<id>/<data>/<slug>.json + prévia .html
@@ -44,7 +46,10 @@ plano_correcao.py → entregas/<id>/plano-de-correcao.html   publicador.py / pla
 | `radar/executor.py` | Monta perguntas × provedores × rodadas, roda em `ThreadPoolExecutor`, para na primeira recusa de conta (401/403/sem saldo) para não repetir o erro. | provedores, extrator, analise |
 | `radar/extrator.py` | Para cada resposta: a marca aparece? Quem foi recomendado? Usa IA (nível "extracao") com saída estruturada; filtra listas e diretórios que não são concorrentes. | `ia.py` |
 | `radar/analise.py` | Métricas por IA e por pergunta, ranking de concorrentes, tipo de cada fonte (concorrente, terceiro, plataforma, marca). Sem IA. | — |
-| `radar/auditoria.py` | Robôs de IA conseguem acessar o site? robots.txt, sitemap, dados estruturados, sinais de identidade (CNPJ, endereço, perfis, página Sobre). | requests |
+| `radar/auditoria.py` | Robôs de IA conseguem acessar o site? robots.txt (leitor próprio pelo RFC 9309: a regra mais longa vence, curingas `*` e `$`; igual em qualquer versão do Python), sitemap, dados estruturados, sinais de identidade (CNPJ, endereço, perfis, página Sobre). Só a página inicial. | `rede.py` |
+| `radar/pagina.py` | O que um robô encontra numa página HTML sem executar JavaScript: título, descrição, diretivas, canonical, H1, texto visível, links, fichas JSON-LD. Usa o parser da biblioteca padrão. Também usado pela checagem do site gerado. | — |
+| `radar/rastreador.py` | Percorre o site do cliente (página inicial + sitemap + links, até `RASTREIO_LIMITE` páginas), respeitando o robots.txt e com pausa entre pedidos. Grava só os sinais de cada página. `problemas()` lista os defeitos (calculados na leitura, para regras novas valerem em rastreios antigos); `comparar()` diz o que foi resolvido entre dois rastreios; `ler_externas()` lê uma vez as páginas de concorrentes citadas. | `rede.py`, `pagina.py`, `auditoria.py` |
+| `radar/cruzamento.py` | Junta radar e rastreamento, sem rede e sem IA: estado das páginas do cliente que as IAs citaram, a página mais próxima de cada pergunta (por palavras em comum; título, H1 e endereço pesam mais) e as ações do site no plano, com títulos fixos. | `rastreador.py` |
 | `ia.py` | Chamada única de IA com saída validada por Pydantic. Tenta os provedores na ordem de `GERACAO_PROVEDORES`; pula o que falhar por conta. | anthropic, openai |
 | `conteudo/` | Pauta, redação, marcadores de pendência, renderização (HTML + JSON-LD), publicação como rascunho. | `ia.py` |
 | `custos.py` | Tabela de preços, `Contador` (thread-safe) que barra chamada paga sem autorização ou acima do teto, livro de gastos. | — |
@@ -52,7 +57,7 @@ plano_correcao.py → entregas/<id>/plano-de-correcao.html   publicador.py / pla
 | `site_cliente/` | Sites dos clientes: catálogo de blocos com campos declarados e validação (`blocos.py`), geração estática por blocos com fichas JSON-LD derivadas (`gerador.py`), checagens antes de publicar (`checagem.py`) e rascunho a partir do cadastro (`inicial.py`). O editor do Portal (`app/static/site-editor.js`) monta os formulários a partir do catálogo. | Jinja2, Pillow |
 | `app/telas.py` | Transforma resultados salvos no que cada tela mostra (inclui intervalos de confiança de Wilson). | — |
 | `app/seguranca.py` | Proteções do app web: ids e caminhos de arquivo validados, lista de Hosts (DNS rebinding), bloqueio de pedidos de outra origem (CSRF), JSON só com Content-Type, CSP e cabeçalhos. Ver [SECURITY.md](../SECURITY.md). | Flask |
-| `rede.py` | Downloads feitos pelo servidor (cadastro, auditoria): só http(s), só IP público, cada redirecionamento conferido (SSRF). | requests |
+| `rede.py` | Downloads feitos pelo servidor (cadastro, auditoria, rastreamento): só http(s), só IP público, cada redirecionamento conferido (SSRF); opcionalmente registra a cadeia de redirecionamentos e corta respostas grandes. | requests |
 | `privacidade.py` | Lista, exporta e apaga tudo de um cliente (LGPD, Art. 18). Fonte de verdade de onde o sistema grava dados por cliente. Ver [LGPD.md](LGPD.md). | — |
 | `plano_correcao.py` | Monta o plano de correção em HTML a partir dos guias em `entregas/<id>/*.md`. | Markdown |
 
@@ -65,7 +70,8 @@ fictício `exemplo`, para testes e demonstração.
 |---|---|---|
 | `config/clientes/<id>.json` | Perfil do cliente (fatos que o redator pode usar), perguntas, configuração de publicação | Só `exemplo.json` |
 | `config/sites/<id>/` | Textos, marca e imagens do site do cliente (`site.json` + `assets/`) | Só `exemplo/` |
-| `data/runs/<id>/*.json` | Resultado completo de cada radar: respostas, fontes, métricas, auditoria | Não |
+| `data/runs/<id>/*.json` | Resultado completo de cada radar: respostas, fontes, métricas, auditoria, nome do rastreamento feito junto e sinais das páginas de concorrentes citadas | Não |
+| `data/rastreios/<id>/*.json` | Cada rastreamento do site: os sinais de cada página (sem o HTML) | Não |
 | `data/conteudo/<id>/<data>/` | Pauta, artigos (JSON + prévia HTML) e central de conteúdo | Não |
 | `data/plano/<id>.json` | Andamento das ações do plano | Não |
 | `data/medicao/<id>/` | Coletas de GA4 e Search Console | Não |
@@ -113,12 +119,23 @@ fictício `exemplo`, para testes e demonstração.
   de APIs pagas ou de contas de clientes).
 - A leitura de site no cadastro (`cadastro.py`) não executa JavaScript: sites montados só no
   navegador devolvem pouco texto.
+- O rastreador também não executa JavaScript, de propósito: é assim que os robôs de IA leem. Página
+  quase vazia com raiz de app (React, Next, Vue…) vira o problema "texto só com JavaScript"; se o
+  GPTBot recebe mais texto que o navegador (pré-renderização), vale a versão do GPTBot.
+- Rastreamento em JSON: até alguns milhares de páginas vai bem; acima disso, precisa de banco
+  (SQLite) e de poder retomar do meio. Endereços com `?` ficam de fora (filtros e buscas geram
+  páginas sem fim).
+- A ligação pergunta → página é por palavras em comum: aproximação, mostrada como "página mais
+  próxima". A comparação com concorrentes mostra o que as páginas citadas têm em comum, não a causa
+  da citação.
 - `rede.py` confere o IP antes de baixar, mas o `requests` resolve o nome de novo: um domínio
   preparado para trocar de IP entre as duas consultas passaria (DNS rebinding). Risco baixo aqui,
   porque quem digita a URL é o próprio operador; num serviço aberto, fixar o IP na conexão.
 - Algumas funções concentram lógica demais (complexidade ciclomática medida com radon):
   `radar/analise.calcular` (64), `app/telas.radar` (57), `app/telas.conteudo` (30). Funcionam e têm
   teste, mas são as primeiras candidatas a quebrar em partes. Detalhes em [AUDITORIA.md](AUDITORIA.md).
+  Do rastreamento, a maior é `radar/rastreador.problemas` (23 pela contagem do ruff, que conta menos
+  que o radon): uma sequência de checagens independentes, cada uma coberta pelo teste do site falso.
 
 ## Próximos passos técnicos sugeridos
 

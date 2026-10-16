@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 
 import ia
 from config import settings
+from radar import cruzamento, rastreador
 
 PROMPT_PAUTA = """Você é estrategista de conteúdo da TimeLabs. Monte uma pauta de {n} artigos de blog
 para o site de {nome} ({segmento}, {cidade}/{regiao}). O objetivo de cada artigo é fazer a empresa
@@ -30,6 +31,8 @@ Resultado do radar de visibilidade (o que as IAs responderam hoje):
 {midia}
 Critérios:
 - Priorize perguntas em que a marca não apareceu e concorrentes apareceram.
+- Perguntas sem nenhuma página no site vêm primeiro. Quando já existe uma página sobre o assunto,
+  o artigo complementa essa página (e diz no ângulo qual é), em vez de repetir o que ela já cobre.
 - Um artigo por intenção; nada de dois artigos disputando a mesma pergunta.
 - Prefira recortes que a empresa pode responder com autoridade: os nichos e o processo dela.
 - Inclua variações locais e de nicho que um cliente realmente digitaria ou perguntaria.
@@ -66,8 +69,10 @@ def ultimo_radar(cliente_id: str, incluir_demo: bool) -> Path | None:
     return runs[-1] if runs else None
 
 
-def resumir_radar(run: dict) -> str:
-    """Texto curto por pergunta: quem foi citado, se a marca apareceu, fontes."""
+def resumir_radar(run: dict, rastreio: dict | None = None) -> str:
+    """Texto curto por pergunta: quem foi citado, se a marca apareceu, fontes. Com o rastreamento
+    do site: a página que já trata de cada pergunta, ou que não há nenhuma."""
+    paginas = {q["pergunta"]: q for q in cruzamento.perguntas(run, rastreio)} if rastreio else {}
     linhas = []
     for q in run["cliente"]["perguntas"]:
         if q["tipo"] != "descoberta":
@@ -75,8 +80,14 @@ def resumir_radar(run: dict) -> str:
         rs = [r for r in run["respostas"] if r["pergunta"] == q["texto"] and not r["erro"]]
         com_marca = sum(r["marca_mencionada"] for r in rs)
         concorrentes = sorted({n for r in rs for n in r["empresas_recomendadas"]})[:8]
+        site = ""
+        if q["texto"] in paginas:
+            p = paginas[q["texto"]]
+            site = (f"; no site: {p['pagina']['url']} (“{p['pagina']['titulo']}”"
+                    + (f"; problemas: {', '.join(p['motivos'])}" if p["motivos"] else "") + ")"
+                    if p["pagina"] else "; no site: NENHUMA página trata disso")
         linhas.append(f"- \"{q['texto']}\": marca em {com_marca}/{len(rs)} respostas; "
-                      f"recomendados: {', '.join(concorrentes) or 'nenhum'}")
+                      f"recomendados: {', '.join(concorrentes) or 'nenhum'}{site}")
     fontes = ", ".join(f["dominio"] for f in run["metricas"]["fontes"][:8])
     linhas.append(f"Fontes mais usadas pelas IAs: {fontes or 'nenhuma'}")
     return "\n".join(linhas)
@@ -109,7 +120,7 @@ def gerar_pauta(cliente: dict, run: dict | None, demo: bool = False) -> dict:
             n=settings.ARTIGOS_POR_PAUTA, nome=cliente["nome"], segmento=cliente["segmento"],
             cidade=cliente["cidade"], regiao=cliente["regiao"],
             perfil=ia.perfil_para_prompt(cliente["perfil"]),
-            radar=resumir_radar(run) if run else "(radar ainda não rodado)",
+            radar=resumir_radar(run, rastreador.ultimo(cliente["id"])) if run else "(radar ainda não rodado)",
             midia=_bloco_midia(cliente["id"]),
         ), Pauta, esforco="high")
 

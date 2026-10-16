@@ -228,9 +228,42 @@ kbd{font:500 10px/1 var(--mono);border:1px solid var(--linha);padding:3px 5px;co
 .checks li+li{border-top:1px solid var(--linha)}
 .checks .ic{width:22px;height:22px;display:grid;place-items:center;font:600 12px var(--sans);border:1px solid var(--good);color:var(--good)}
 .checks .falha .ic{border-color:var(--accent);background:var(--accent);color:#fff}
+.checks .aviso .ic{border-color:var(--accent);color:var(--accent-texto)}
 .checks b{display:block;font:600 14.5px/1.35 var(--sans)}
 .checks .det{display:block;font:400 11.5px/1.5 var(--mono);color:var(--soft);margin-top:3px;word-break:break-word}
 .checks p{margin:8px 0 0;font-size:13.5px;color:var(--muted);line-height:1.5;max-width:90ch}
+
+/* rastreamento do site: pergunta × página, páginas citadas, tela do rastreio */
+.pp-cab{padding-bottom:0}
+.pp{list-style:none;margin:0;padding:0}
+.pp li{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.2fr);gap:6px 20px;padding:14px 20px;align-items:baseline}
+.pp li+li{border-top:1px solid var(--linha)}
+.pp-perg{font-size:14px;line-height:1.4}
+.pp-marca,.pp-tit{display:block;font:400 11.5px/1.5 var(--mono);color:var(--soft);margin-top:3px}
+.pp-pag a{font:500 13px/1.4 var(--mono);color:var(--ink);text-decoration:none;overflow-wrap:anywhere}
+.pp-pag a:hover{color:var(--accent)}
+.pp-vazio{font-size:13px;color:var(--accent-texto)}
+.pp-mot{display:block;font-size:12.5px;line-height:1.45;color:var(--muted);margin-top:6px}
+.pp-comp{grid-column:1/-1;font:400 11.5px/1.6 var(--mono);color:var(--soft)}
+.pp-comp .dif{color:var(--accent-texto)}
+.pags .st{font:500 10px/1.4 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--soft);text-align:right}
+.pags .st.erro{color:var(--accent-texto)}
+.pags .st.ok{color:var(--good)}
+.caixa-corpo.sem-pad{padding:0}
+.sub-rot.pad{padding:20px 20px 0}
+.convite{display:flex;justify-content:space-between;align-items:center;gap:16px 32px;flex-wrap:wrap}
+.convite p{margin:0;font-size:14px;color:var(--muted);max-width:70ch}
+.tab-rast td{font-size:13px}
+.tab-rast .c{font:500 12.5px/1.4 var(--mono);overflow-wrap:anywhere}
+.tab-rast tr.ruim td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.tab-rast .num{white-space:nowrap}
+.prob-pags{list-style:none;margin:8px 0 0;padding:0;font:400 12px/1.6 var(--mono);color:var(--soft)}
+.checks .prob-pags li{display:block;padding:0;border:0;overflow-wrap:anywhere}
+.checks .prob-pags b{display:inline;font:500 12px/1.6 var(--mono);color:var(--ink)}
+.acao-txt .acao-nota{margin:8px 0 0;font:400 11.5px/1.5 var(--mono);color:var(--good)}
+.acao-txt .acao-nota.alerta{color:var(--accent-texto)}
+.mudou{display:flex;flex-wrap:wrap;gap:6px 24px;font-size:13.5px;color:var(--muted)}
+.mudou b{color:var(--ink)}
 
 .buscas{list-style:none;margin:0;padding:6px 18px 12px;columns:2 320px;column-gap:32px}
 .buscas li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--linha);
@@ -549,6 +582,11 @@ textarea.md{font:400 13.5px/1.7 var(--mono);min-height:520px}
  .campo.duas{grid-template-columns:1fr}
  .destaques{flex-direction:column}.destaques div+div{border-left:0;border-top:1px solid var(--linha)}
  .lista-marca{grid-template-columns:1fr}
+ .pp li{grid-template-columns:1fr}
+ .tab-rast thead{display:none}
+ .tab-rast tr{display:grid;grid-template-columns:1fr auto;border-bottom:1px solid var(--linha)}
+ .tab-rast td{border:0}
+ .tab-rast td:nth-child(3),.tab-rast td:nth-child(4){grid-column:1/-1;padding-top:0}
  .lista-marca li{border-right:0 !important;border-top:1px solid var(--linha)}
  .lista-marca li:first-child{border-top:0}
  .secao+.secao{margin-top:48px}

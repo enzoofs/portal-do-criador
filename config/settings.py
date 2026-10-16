@@ -72,6 +72,18 @@ GERACAO_PROVEDORES = os.getenv("GERACAO_PROVEDORES", "claude,openai").split(",")
 # Execução paralela (uma thread por pergunta x provedor)
 MAX_WORKERS = 6
 
+# Compartilhar o Portal com a equipe por um túnel (ngrok): o endereço público do túnel e o
+# usuário e a senha exigidos nele. Sem endereço, o Portal só responde em 127.0.0.1, como sempre;
+# com endereço e sem senha, o endereço público fica fechado.
+PORTAL_HOST_PUBLICO = os.getenv("PORTAL_HOST_PUBLICO", "").strip().lower().removeprefix("https://").rstrip("/")
+PORTAL_USUARIO = os.getenv("PORTAL_USUARIO", "equipe")
+PORTAL_SENHA = os.getenv("PORTAL_SENHA", "")
+
+# Rastreamento do site do cliente (grátis: não usa IA nem API paga)
+RASTREIO_DIR = BASE_DIR / "data" / "rastreios"
+RASTREIO_LIMITE = int(os.getenv("RASTREIO_LIMITE", "300"))      # páginas por rastreamento
+RASTREIO_PAUSA = float(os.getenv("RASTREIO_PAUSA", "0.5"))      # segundos entre pedidos ao site
+
 # --------------------------------------------------------------------------
 # Conteúdo
 # --------------------------------------------------------------------------

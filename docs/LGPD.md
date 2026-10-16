@@ -30,6 +30,8 @@ Tudo fica em arquivos na máquina de quem opera o Portal. Nada disso vai para o 
 | Contato comercial | WhatsApp | muitas vezes o celular do dono | `config/clientes/<id>.json` (`perfil.cta`) | botão do site e dos artigos |
 | Site do cliente | fotos do fundador, depoimentos (nome e cargo de quem deu), CNPJ, endereço | fundador; clientes do cliente | `config/sites/<id>/` | site gerado |
 | Respostas das IAs (radar) | texto público que cita empresas e, às vezes, pessoas | terceiros citados | `data/runs/<id>/` | medir a visibilidade |
+| Rastreamento do site | de cada página pública do site do cliente: título, descrição, os primeiros 300 caracteres do texto e os links (nunca o HTML inteiro) | (empresa; o texto público pode citar pessoas) | `data/rastreios/<id>/` | achar o que impede o site de ser citado |
+| Páginas de concorrentes citadas | os mesmos sinais, de até 10 páginas públicas que as IAs citaram | (empresas concorrentes) | `data/runs/<id>/` (`paginas_concorrentes`) | comparar com as páginas do cliente |
 | Artigos e respostas do especialista | texto, dados que o especialista confirma | especialista | `data/conteudo/<id>/` | blog |
 | Métricas | sessões e cliques agregados do GA4 e do Search Console | (agregado; sem visitante individual) | `data/medicao/<id>/` | resultados |
 | Termos do Google Ads | buscas agregadas | (agregado; raramente contém um nome) | `data/midia/<id>.json` | pauta |
@@ -56,6 +58,7 @@ GA4, pixel ou chat, o site passa a precisar de aviso e de gestão de consentimen
 | Foto, nome e minibio do fundador no site | consentimento (I) ou contrato, se o fundador for parte | também é direito de imagem (Código Civil, Art. 20): pedir autorização por escrito |
 | Depoimentos de clientes do cliente | consentimento (I) de quem deu o depoimento, colhido pelo cliente | registrar a autorização; sem ela, o bloco não vai ao ar |
 | Respostas públicas de IA que citam terceiros (radar) | legítimo interesse (IX), com teste de balanceamento | dado tornado público; uso limitado à medição (Art. 7, §§ 3º, 4º e 7º) |
+| Rastreamento do site do cliente e de páginas de concorrentes citadas | execução de contrato (V) para o site do cliente; legítimo interesse (IX) para as páginas públicas de concorrentes | só sinais técnicos e um trecho curto; uma leitura por página de concorrente, respeitando o robots.txt de cada site |
 | Métricas agregadas | não é dado pessoal se não der para reidentificar (Art. 12) | o sistema só lê relatórios agregados, com permissão de leitura |
 
 ## 4. Fornecedores e transferência internacional (Art. 33)

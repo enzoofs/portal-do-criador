@@ -8,7 +8,7 @@ o impacto em linguagem de dono de negócio.
 
 import json
 import re
-from urllib.parse import urljoin
+from urllib.parse import unquote, urljoin, urlsplit
 
 import rede
 
@@ -37,6 +37,66 @@ ROBOS = [
 
 def _get(url: str, ua: str = NAVEGADOR):
     return rede.baixar(url, {"User-Agent": ua}, timeout=20)
+
+
+# --------------------------------------------------------------------------
+# robots.txt pelo padrão (RFC 9309), igual em qualquer versão do Python. O leitor da biblioteca
+# padrão muda de comportamento entre versões: até a 3.13 ignora curingas e usa a primeira regra
+# que casa, não a mais longa.
+# --------------------------------------------------------------------------
+
+def regras_robots(texto: str) -> dict[str, list[tuple[bool, str]]]:
+    """Robô (minúsculas, ou "*") -> [(permite, caminho)]. Linhas User-agent seguidas formam um
+    grupo só, e grupos repetidos do mesmo robô se somam."""
+    grupos: dict[str, list[tuple[bool, str]]] = {}
+    agentes: list[str] = []
+    em_regras = False
+    for linha in texto.splitlines():
+        campo, _, valor = linha.split("#", 1)[0].partition(":")
+        campo, valor = campo.strip().lower(), valor.strip()
+        if campo == "user-agent":
+            if em_regras:
+                agentes, em_regras = [], False
+            nome = (valor.split("/")[0].split() or [""])[0].lower()
+            if nome:
+                agentes.append(nome)
+                grupos.setdefault(nome, [])
+        elif campo in ("allow", "disallow") and agentes:
+            em_regras = True
+            for a in agentes:
+                grupos[a].append((campo == "allow", valor))
+    return grupos
+
+
+def caminho_de(url: str) -> str:
+    partes = urlsplit(url)
+    return (partes.path or "/") + (f"?{partes.query}" if partes.query else "")
+
+
+def _casa(padrao: str, caminho: str) -> bool:
+    fim = padrao.endswith("$")
+    corpo = re.sub(r"\*+", "*", unquote(padrao[:-1] if fim else padrao))
+    if corpo.count("*") > 10:   # regra patológica: não deixa a expressão travar o rastreamento
+        return False
+    regex = ".*".join(re.escape(p) for p in corpo.split("*")) + ("$" if fim else "")
+    return re.match(regex, unquote(caminho)) is not None
+
+
+def permite(regras: dict, robo: str, caminho: str) -> bool:
+    """O robô pode abrir o caminho? Vale o grupo do robô ou, sem ele, o "*". Entre as regras que
+    casam, a mais longa vence; no empate, Allow. "Disallow:" vazio não proíbe nada."""
+    grupo = regras.get(robo.lower(), regras.get("*", []))
+    melhor, pode = -1, True
+    for allow, padrao in grupo:
+        if padrao and _casa(padrao, caminho) and (len(padrao) > melhor or (len(padrao) == melhor and allow)):
+            melhor, pode = len(padrao), allow
+    return pode
+
+
+def robos_bloqueados(texto_robots: str, url: str) -> list[str]:
+    """Robôs da lista que o robots.txt proíbe de abrir a URL."""
+    regras, caminho = regras_robots(texto_robots), caminho_de(url)
+    return [r for r, _, _ in ROBOS if not permite(regras, r, caminho)]
 
 
 def _check(nome, ok, detalhe, impacto="") -> dict:
@@ -89,9 +149,7 @@ def auditar(site: str) -> list[dict]:
 
     robots = _get(urljoin(base, "robots.txt"))
     texto_robots = robots.text if robots is not None and robots.status_code == 200 else ""
-    bloqueio_robots = [r for r, _, _ in ROBOS
-                       if re.search(rf"User-agent:\s*{re.escape(r)}\s*\n(?:.*\n)*?\s*Disallow:\s*/\s*$",
-                                    texto_robots, re.I | re.M)]
+    bloqueio_robots = robos_bloqueados(texto_robots, base) if texto_robots else []
     checks.append(_check(
         "robots.txt libera as IAs", bool(texto_robots) and not bloqueio_robots,
         ("bloqueia: " + ", ".join(bloqueio_robots)) if bloqueio_robots else

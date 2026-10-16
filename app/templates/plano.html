@@ -6,7 +6,8 @@
 {% if acoes %}
 {% set feitas = acoes|selectattr('status', 'equalto', 'feito')|list|length %}
 {% set andamento = acoes|selectattr('status', 'equalto', 'em andamento')|list|length %}
-{% set meta %}{{ acoes|length }} ações a partir do radar de <span class="mono">{{ run.gerado_em|data_br }}</span>, em ordem de impacto{% endset %}
+{% set meta %}{{ acoes|length }} ações a partir do radar de <span class="mono">{{ run.gerado_em|data_br }}</span>
+  {%- if rast %} e do rastreamento do site de <span class="mono">{{ rast.gerado_em|data_br }}</span>{% endif %}, em ordem de impacto{% endset %}
 {% call ui.cabecalho('Plano de ações', meta) %}
   <div class="prog-cab">
     <div class="prog-num"><b data-feitas>{{ feitas }}</b><span>/{{ acoes|length }}</span></div>
@@ -22,10 +23,12 @@
     {% for a in acoes %}
     <li class="acao{{ ' feito' if a.status == 'feito' }}">
       <span class="acao-n">{{ '%02d'|format(loop.index) }}</span>
-      <div class="acao-txt"><h3>{{ a.titulo }}</h3><p>{{ a.texto }}</p></div>
+      <div class="acao-txt"><h3>{{ a.titulo }}</h3><p>{{ a.texto }}</p>
+        {% if a.nota %}<p class="acao-nota{{ ' alerta' if a.nota_alerta }}">{{ a.nota }}</p>{% endif %}</div>
       <div class="acao-guia">
         {% if a.guia %}<a class="btn peq" href="{{ url_for('guia', cid=c.id, nome=a.guia) }}">Abrir o guia →</a>
-        {% elif 'conteúdo' in a.titulo.lower() or 'blog' in a.titulo.lower() %}<a class="btn peq" href="{{ url_for('conteudo', cid=c.id) }}">Ir para o conteúdo →</a>{% endif %}
+        {% elif a.chave == 'sem_pagina' or 'conteúdo' in a.titulo.lower() or 'blog' in a.titulo.lower() %}<a class="btn peq" href="{{ url_for('conteudo', cid=c.id) }}">Ir para o conteúdo →</a>
+        {% elif a.origem == 'site' %}<a class="btn peq" href="{{ url_for('rastreio', cid=c.id) }}">Ver no rastreamento →</a>{% endif %}
       </div>
       {{ ui.status_acao(c, a) }}
     </li>

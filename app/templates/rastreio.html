@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% import "_ui.html" as ui with context %}
+{% block titulo %}Rastreamento · {{ c.nome }}{% endblock %}
+{% block trilha %}{{ ui.trilha(c, 'Rastreamento do site') }}{% endblock %}
+{% block conteudo %}
+{% set meta %}{% if rast %}<span class="mono">{{ rast.gerado_em|data_br }}</span> · {{ rast.site }}{% if rast.duracao_s >= 1 %} · {{ rast.duracao_s|int }} s{% endif %}
+  {%- if rast.demo %} <span class="etq demo">demonstração</span>{% endif %}
+{% else %}O site ainda não foi rastreado.{% endif %}{% endset %}
+{% call ui.cabecalho('Rastreamento do site', meta) %}
+  <a class="btn leve" href="{{ url_for('radar', cid=c.id) }}#site">← Radar</a>
+  <button class="btn primario" data-tarefa="rastreio" data-cliente="{{ c.id }}" data-gratis>{{ 'Rastrear de novo' if rast else 'Rastrear o site' }}</button>
+{% endcall %}
+
+{% if v %}
+<div class="faixa-kpi solta">
+  <div class="kpi"><div class="kpi-k">Páginas lidas</div><div class="kpi-v">{{ v.resumo.lidas }}</div>
+    <div class="kpi-l">de {{ v.resumo.paginas }} endereços visitados{% if v.resumo.parou_no_limite %}; parou no limite de {{ v.resumo.limite }}{% endif %}</div></div>
+  <div class="kpi{{ ' alerta' if v.resumo.quebradas }}"><div class="kpi-k">Não abrem</div><div class="kpi-v">{{ v.resumo.quebradas }}</div>
+    <div class="kpi-l">endereços com erro ou sem resposta</div></div>
+  <div class="kpi{{ ' alerta' if v.resumo.pouco_texto }}"><div class="kpi-k">Pouco texto</div><div class="kpi-v">{{ v.resumo.pouco_texto }}</div>
+    <div class="kpi-l">páginas com menos de 150 palavras no HTML</div></div>
+  <div class="kpi{{ ' alerta' if v.resumo.erros }}"><div class="kpi-k">Problemas</div>
+    <div class="kpi-v">{{ v.resumo.erros }}<small> graves</small></div><div class="kpi-l">e {{ v.resumo.avisos }} aviso{{ 's' if v.resumo.avisos != 1 }}</div></div>
+</div>
+{% if v.mudancas %}
+<div class="caixa mt"><div class="caixa-corpo mudou">
+  <span>Desde o rastreio de <span class="mono">{{ v.mudancas.desde|data_br }}</span>:</span>
+  <span><b>{{ v.mudancas.resolvidos|length }}</b> problema{{ 's' if v.mudancas.resolvidos|length != 1 }} resolvido{{ 's' if v.mudancas.resolvidos|length != 1 }}</span>
+  <span><b>{{ v.mudancas.novos|length }}</b> novo{{ 's' if v.mudancas.novos|length != 1 }}</span>
+  {% if v.mudancas.resolvidos %}<span>Resolvidos: {{ v.mudancas.resolvidos[:4]|map(attribute='rotulo')|join('; ') }}{% if v.mudancas.resolvidos|length > 4 %}…{% endif %}</span>{% endif %}
+  {% if v.mudancas.novos %}<span>Novos: {{ v.mudancas.novos[:4]|map(attribute='rotulo')|join('; ') }}{% if v.mudancas.novos|length > 4 %}…{% endif %}</span>{% endif %}
+</div></div>
+{% endif %}
+
+<section class="secao mt" id="problemas">
+  {{ ui.secao_cab('Problemas encontrados', 'Primeiro o que impede o site de ser citado, depois o que só atrapalha. Cada um com as páginas e como resolver.',
+                  v.problemas|length ~ ' tipo' ~ ('s' if v.problemas|length != 1 else '')) }}
+  <div class="caixa">
+    <ul class="checks">
+      {% for p in v.problemas %}
+      <li class="{{ 'falha' if p.nivel == 'erro' else 'aviso' }}">
+        <span class="ic" aria-label="{{ 'grave' if p.nivel == 'erro' else 'aviso' }}">{{ '✕' if p.nivel == 'erro' else '!' }}</span>
+        <div><b>{{ p.titulo }}{% if p.total %} ({{ p.total }}){% endif %}</b><p>{{ p.detalhe }}</p>
+          {% if p.paginas %}<ul class="prob-pags">{% for x in p.paginas[:8] %}<li><b>{{ x.caminho }}</b> · {{ x.nota }}</li>{% endfor %}
+            {% if p.total > 8 %}<li>e mais {{ p.total - 8 }}</li>{% endif %}</ul>{% endif %}
+          <p class="ch-resolver"><span>Como resolver</span>{{ p.resolver }}</p></div>
+      </li>
+      {% else %}
+      <li class="ok"><span class="ic" aria-label="ok">✓</span><div><b>Nenhum problema encontrado</b>
+        <span class="det">O site abre, tem texto no HTML e não bloqueia os robôs de IA.</span></div></li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+{% if v.site %}
+<section class="secao" id="cruzamento">
+  {{ ui.secao_cab('Cruzado com o último radar', 'A página do site mais próxima de cada pergunta de indicação e o estado das páginas que as IAs citaram.') }}
+  {% include "_site.html" %}
+</section>
+{% endif %}
+
+<section class="secao" id="paginas">
+  {{ ui.secao_cab('Todas as páginas', 'O que o rastreamento encontrou em cada endereço do site.', v.paginas|length ~ ' endereços') }}
+  <div class="caixa">
+    <table class="tab tab-rast">
+      <thead><tr><th>Endereço</th><th>Estado</th><th>Título</th><th class="num">Palavras</th></tr></thead>
+      <tbody>
+        {% for p in v.paginas %}
+        <tr class="{{ 'ruim' if p.ruim }}">
+          <td class="c"><a href="{{ p.url }}" target="_blank" rel="noopener">{{ p.caminho }}</a></td>
+          <td>{{ p.estado }}</td>
+          <td>{{ p.titulo }}</td>
+          <td class="num">{{ p.palavras if p.palavras is not none else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% else %}
+<div class="vazio-estado">
+  <h2>O que um robô de IA encontra no site da {{ c.nome }}?</h2>
+  <p>O rastreamento abre página por página do site como um robô de IA: sem executar JavaScript e respeitando o
+  robots.txt. Mostra o que não abre, o que está escondido da busca, o que chega sem texto, e qual página responde a
+  cada pergunta do radar. É grátis: não usa IA nem API paga.</p>
+  <div class="acoes"><button class="btn primario" data-tarefa="rastreio" data-cliente="{{ c.id }}" data-gratis>Rastrear o site</button></div>
+</div>
+{% endif %}
+{% endblock %}

@@ -8,11 +8,11 @@ problema em linguagem simples e onde resolver no editor. Níveis:
     ok     conferido
 """
 
-import json
 import re
-from html import unescape
 from pathlib import Path
 
+from radar import auditoria
+from radar.pagina import sinais
 from site_cliente import gerador
 
 ROBOS_ESSENCIAIS = ("GPTBot", "OAI-SearchBot", "ClaudeBot", "PerplexityBot")
@@ -20,13 +20,6 @@ ROBOS_ESSENCIAIS = ("GPTBot", "OAI-SearchBot", "ClaudeBot", "PerplexityBot")
 
 def _item(nivel, area, mensagem, resolver="", pagina=""):
     return {"nivel": nivel, "area": area, "mensagem": mensagem, "resolver": resolver, "pagina": pagina}
-
-
-def _texto_visivel(html: str) -> str:
-    corpo = re.search(r"(?is)<main.*?</main>", html)
-    corpo = corpo.group(0) if corpo else html
-    corpo = re.sub(r"(?is)<(script|style|noscript|svg)[^>]*>.*?</\1>", " ", corpo)
-    return re.sub(r"\s+", " ", unescape(re.sub(r"<[^>]+>", " ", corpo))).strip()
 
 
 def _rotulo(arquivo: Path, raiz: Path) -> str:
@@ -79,9 +72,9 @@ def checar(cid: str, pasta: Path | None = None) -> dict:
                            "Páginas → Adicionar página → Serviço e cidade. É o que a IA encontra em buscas locais."))
 
     # robots e sitemap da versão para publicar
-    robots = (pasta / "robots.txt").read_text(encoding="utf-8")
-    bloqueados = [r for r in ROBOS_ESSENCIAIS if re.search(rf"User-agent:\s*{r}\s*\nDisallow:\s*/", robots)] + \
-                 (["todos"] if re.search(r"User-agent:\s*\*\s*\nDisallow:\s*/\s*$", robots, re.M) else [])
+    regras = auditoria.regras_robots((pasta / "robots.txt").read_text(encoding="utf-8"))
+    bloqueados = [r for r in ROBOS_ESSENCIAIS if not auditoria.permite(regras, r, "/")] + \
+                 (["todos"] if not auditoria.permite(regras, "*", "/") else [])
     itens.append(_item("erro", "Robôs", f"robots.txt bloqueia {', '.join(bloqueados)}.", "Gerar de novo a versão para publicar.")
                  if bloqueados else _item("ok", "Robôs", "Robôs de busca e de IA liberados no robots.txt."))
     sitemap = (pasta / "sitemap.xml").read_text(encoding="utf-8")
@@ -91,10 +84,8 @@ def checar(cid: str, pasta: Path | None = None) -> dict:
     for f in paginas_html:
         html = f.read_text(encoding="utf-8")
         rot = _rotulo(f, pasta)
-        titulo = unescape((re.search(r"<title>(.*?)</title>", html, re.S) or [None, ""])[1]).strip()
-        desc = unescape((re.search(r'<meta name="description" content="([^"]*)"', html) or [None, ""])[1])
-        h1 = len(re.findall(r"<h1[\s>]", html))
-        canon = (re.search(r'<link rel="canonical" href="([^"]+)"', html) or [None, ""])[1]
+        sn = sinais(html, s["dominio"].rstrip("/") + rot)
+        titulo, desc, h1, canon = sn["titulo"], sn["descricao"], sn["h1"], sn["canonical"]
         if not titulo:
             itens.append(_item("erro", "Google", "Página sem título.", "Edite o título para o Google da página.", rot))
         elif len(titulo) > 60:
@@ -110,12 +101,9 @@ def checar(cid: str, pasta: Path | None = None) -> dict:
                                "Use um bloco Abertura ou Cabeçalho de página, e só um.", rot))
         if canon and canon not in no_sitemap and not rot.startswith("/404"):
             itens.append(_item("aviso", "Google", "Página fora do sitemap.", "Gerar de novo a versão para publicar.", rot))
-        for bloco in re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S):
-            try:
-                json.loads(bloco.replace("<\\/", "</"))
-            except ValueError:
-                itens.append(_item("erro", "Fichas", "Ficha para Google e IAs (JSON-LD) inválida.", "Avise a TimeLabs: é erro do gerador.", rot))
-        palavras = len(_texto_visivel(html).split())
+        if sn["jsonld_invalido"]:
+            itens.append(_item("erro", "Fichas", "Ficha para Google e IAs (JSON-LD) inválida.", "Avise a TimeLabs: é erro do gerador.", rot))
+        palavras = sn["palavras"]
         if "/blog/" not in rot and rot not in ("/",) and palavras < 300:
             itens.append(_item("aviso", "Conteúdo", f"Página com só {palavras} palavras.",
                                "Acrescente um bloco Texto respondendo o que o cliente pergunta. Páginas curtas raramente são citadas.", rot))

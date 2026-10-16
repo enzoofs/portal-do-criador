@@ -26,7 +26,7 @@ from app import dados, seguranca, tarefas, telas
 from config import settings
 from conteudo import fluxo, pendencias, plataformas, redes, render
 from conteudo.pauta import slugify
-from radar import relatorio
+from radar import rastreador, relatorio
 from site_cliente import blocos, checagem, gerador, inicial
 
 app = Flask(__name__)
@@ -155,8 +155,18 @@ def cliente(cid):
 @app.route("/c/<cid>/radar")
 def radar(cid):
     c = _cliente_ou_404(cid)
-    run = dados.ultimo_radar(cid)
-    return render_template("radar.html", c=c, aba="radar", run=run, v=telas.radar(run) if run else None)
+    run, rast = dados.ultimo_radar(cid), rastreador.ultimo(cid)
+    v = telas.radar(run, rast) if run else None
+    return render_template("radar.html", c=c, aba="radar", run=run, v=v, rast=rast)
+
+
+@app.route("/c/<cid>/rastreio")
+def rastreio(cid):
+    """O site do cliente página por página, como um robô de IA o encontra."""
+    c = _cliente_ou_404(cid)
+    rast = rastreador.ultimo(cid)
+    v = telas.rastreio(rast, dados.ultimo_radar(cid), rastreador.anterior(cid)) if rast else None
+    return render_template("rastreio.html", c=c, aba="radar", rast=rast, v=v)
 
 
 @app.route("/c/<cid>/apresentar")
@@ -166,14 +176,14 @@ def apresentar(cid):
     run = dados.ultimo_radar(cid)
     if not run:
         return redirect(url_for("radar", cid=cid))
-    return render_template("apresentar.html", c=c, run=run, v=telas.radar(run),
+    return render_template("apresentar.html", c=c, run=run, v=telas.radar(run, rastreador.ultimo(cid)),
                            conteudo=telas.conteudo(c), plano=dados.plano(cid, run))
 
 
 @app.route("/c/<cid>/radar/relatorio")
 def radar_relatorio(cid):
     run = dados.ultimo_radar(cid) or abort(404)
-    return send_file(relatorio.salvar(run))  # regera sempre: é rápido e não chama IA
+    return send_file(relatorio.salvar(run, rastreador.ultimo(cid)))  # regera sempre: é rápido e não chama IA
 
 
 # --------------------------------------------------------------------------
@@ -454,6 +464,7 @@ def plano(cid):
     c = _cliente_ou_404(cid)
     run = dados.ultimo_radar(cid)
     return render_template("plano.html", c=c, aba="plano", acoes=dados.plano(cid, run), run=run,
+                           rast=rastreador.ultimo(cid) if run else None,
                            site_novo=(dados.ENTREGAS_DIR / cid / "site-novo" / "index.html").exists())
 
 
@@ -631,10 +642,11 @@ def api_estimativa(cid):
 def api_iniciar(cid):
     _cliente_ou_404(cid)
     corpo = seguranca.json_do_pedido()
-    if not corpo.get("demo") and not corpo.get("confirmado"):
+    gratis = corpo.get("tipo") in tarefas.TAREFAS_GRATIS
+    if not corpo.get("demo") and not corpo.get("confirmado") and not gratis:
         return jsonify({"erro": "Execução paga sem confirmação."}), 400
     demo = bool(corpo.get("demo"))
-    if corpo["tipo"] == "pauta" and not demo:  # pauta de radar demo também é demo (grátis)
+    if corpo["tipo"] in ("pauta", "rastreio") and not demo:  # radar demo: pauta e rastreio também são demo
         run = dados.ultimo_radar(cid)
         demo = bool(run and run["demo"])
     if corpo["tipo"] == "artigos":  # artigos seguem o modo da pauta

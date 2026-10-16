@@ -22,6 +22,7 @@ import medicao
 from app import dados, seguranca
 from config import settings
 from midia import termos
+from radar import rastreador
 from site_cliente import gerador
 
 
@@ -33,6 +34,7 @@ def locais(cliente_id: str) -> list[Path]:
         settings.CLIENTES_DIR / f"{cliente_id}.json",       # cadastro
         gerador.SITES / cliente_id,                         # rascunho do site e imagens enviadas
         settings.RUNS_DIR / cliente_id,                     # radares (respostas das IAs)
+        rastreador.PASTA / cliente_id,                      # rastreamentos do site (sinais das páginas)
         settings.CONTEUDO_DIR / cliente_id,                 # pautas e artigos
         dados.PLANO_DIR / f"{cliente_id}.json",             # andamento do plano de ações
         medicao.PASTA / cliente_id,                         # GA4 e Search Console

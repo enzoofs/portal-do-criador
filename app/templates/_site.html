@@ -1,0 +1,69 @@
+{# O rastreamento do site cruzado com o radar (app/telas.site). Entra na seção #site do radar. #}
+{% set s = v.site %}
+<div class="faixa-kpi solta mt">
+  <div class="kpi{{ ' alerta' if s.cruz.sem_pagina }}"><div class="kpi-k">Perguntas sem página</div>
+    <div class="kpi-v">{{ s.cruz.sem_pagina }}<small>/{{ s.perguntas|length }}</small></div>
+    <div class="kpi-l">nenhuma página do site trata do assunto</div></div>
+  <div class="kpi{{ ' alerta' if s.cruz.fracas }}"><div class="kpi-k">Páginas fracas</div>
+    <div class="kpi-v">{{ s.cruz.fracas }}</div>
+    <div class="kpi-l">perguntas que caem numa página com problema</div></div>
+  <div class="kpi{{ ' alerta' if s.cruz.citadas_com_problema }}"><div class="kpi-k">Citadas pelas IAs</div>
+    <div class="kpi-v">{{ s.n_citadas }}</div>
+    <div class="kpi-l">páginas do site{% if s.cruz.citadas_com_problema %}, {{ s.cruz.citadas_com_problema }} com problema{% endif %}</div></div>
+  <div class="kpi{{ ' alerta' if s.resumo.erros }}"><div class="kpi-k">Páginas lidas</div>
+    <div class="kpi-v">{{ s.resumo.lidas }}</div>
+    <div class="kpi-l">{{ s.resumo.erros }} problema{{ 's' if s.resumo.erros != 1 }} grave{{ 's' if s.resumo.erros != 1 }} · {{ s.resumo.avisos }} aviso{{ 's' if s.resumo.avisos != 1 }}</div></div>
+</div>
+
+{% if s.perguntas %}
+<div class="caixa mt">
+  <div class="caixa-corpo pp-cab"><div class="sub-rot primeiro">Cada pergunta e a página do site mais próxima do assunto</div></div>
+  <ol class="pp">
+    {% for q in s.perguntas %}
+    <li>
+      <div class="pp-perg">“{{ q.pergunta }}”<span class="pp-marca">marca em {{ q.mencoes }} de {{ q.respostas }} resposta{{ 's' if q.respostas != 1 }}</span></div>
+      <div class="pp-pag">{% if q.pagina %}<a href="{{ q.pagina.url }}" target="_blank" rel="noopener">{{ q.caminho }}</a>
+        <span class="pp-tit">{{ q.pagina.titulo|truncate(70, True, '…') }}</span>{% else %}<span class="pp-vazio">nenhuma página trata disso</span>{% endif %}</div>
+      <div class="pp-diag"><span class="etq {{ q.tom }}">{{ q.rotulo }}</span>{% if q.motivos %}<span class="pp-mot">{{ q.motivos|join('; ') }}</span>{% endif %}</div>
+      {% if q.concorrentes %}{% set k = q.concorrentes %}
+      <div class="pp-comp">Páginas de concorrentes citadas ({{ k.citadas }}):
+        {% for x in k.sinais %}<span class="{{ 'dif' if x.diferenca }}">{{ x.sinal }} {{ x.concorrentes }}/{{ k.citadas }}{% if x.cliente is not none %} (a sua: {{ 'sim' if x.cliente else 'não' }}){% endif %}</span> · {% endfor %}
+        cerca de {{ k.mediana_palavras }} palavras{% if k.cliente_palavras is not none %} (a sua: {{ k.cliente_palavras }}){% endif %}</div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+  <footer class="caixa-pe">Rastreamento de <span class="mono">{{ s.data|data_br }}</span>{% if s.demo %} · demonstração{% endif %}
+    · {{ s.resumo.lidas }} páginas lidas{% if s.resumo.parou_no_limite %} (parou no limite de {{ s.resumo.limite }}){% endif %}
+    · <a href="{{ url_for('rastreio', cid=c.id) }}">todas as páginas e problemas →</a>
+    {% if s.perguntas|selectattr('concorrentes')|list %}<br>Concorrentes: o que as páginas citadas pelas IAs têm em comum. Não prova que foi isso que fez a IA citá-las.{% endif %}</footer>
+</div>
+{% endif %}
+
+{% if s.citadas or s.graves %}
+<div class="caixa mt{{ ' duas-col' if s.citadas and s.graves }}">
+  {% if s.citadas %}
+  <div class="caixa-corpo">
+    <div class="sub-rot primeiro">Páginas do site que as IAs citaram</div>
+    <ol class="pags">
+      {% for p in s.citadas %}
+      <li title="{{ p.perguntas|join(' · ') }}"><a href="{{ p.url }}" target="_blank" rel="noopener"><b>{{ p.caminho|truncate(48, True, '…') }}</b></a>
+        <span class="st {{ p.nivel }}">{{ p.estado }}</span><span class="vezes">{{ p.vezes }}×</span></li>
+      {% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+  {% if s.graves %}
+  <div class="caixa-corpo sem-pad">
+    <div class="sub-rot primeiro pad">Problemas graves do site</div>
+    <ul class="checks">
+      {% for p in s.graves %}
+      <li class="falha"><span class="ic" aria-label="problema grave">✕</span>
+        <div><b>{{ p.titulo }} ({{ p.total }})</b><span class="det">{{ p.paginas[:3]|map(attribute='url')|join(' · ') }}</span>
+          <p class="ch-resolver"><span>Como resolver</span>{{ p.resolver }}</p></div></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
